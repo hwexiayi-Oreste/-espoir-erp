@@ -20,13 +20,13 @@ router.get('/', requireAuth, async (req, res) => {
 
     const derniers_devis = await db.allAsync(`
       SELECT d.reference, d.montant_ht, d.statut, d.service, c.nom as client_nom
-      FROM espoir_devis d LEFT JOIN clients c ON d.client_id = c.id
+      FROM espoir_devis d LEFT JOIN espoir_clients c ON d.client_id = c.id
       ORDER BY d.id DESC LIMIT 5
     `);
 
     const chantiers = await db.allAsync(`
       SELECT ch.nom, ch.type_service, ch.lieu, ch.avancement, ch.statut, ch.date_fin_prevue, c.nom as client_nom
-      FROM espoir_chantiers ch LEFT JOIN clients c ON ch.client_id = c.id
+      FROM espoir_chantiers ch LEFT JOIN espoir_clients c ON ch.client_id = c.id
       WHERE ch.statut IN ('en_cours','retard','planifie')
       ORDER BY ch.avancement DESC LIMIT 5
     `);
@@ -35,7 +35,7 @@ router.get('/', requireAuth, async (req, res) => {
 
     const activite = await db.allAsync(`
       SELECT a.action, a.detail, a.created_at, u.prenom || ' ' || u.nom as user_nom
-      FROM espoir_activite a LEFT JOIN utilisateurs u ON a.user_id = u.id
+      FROM espoir_activite a LEFT JOIN espoir_utilisateurs u ON a.user_id = u.id
       ORDER BY a.id DESC LIMIT 6
     `);
 
