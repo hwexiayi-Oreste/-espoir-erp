@@ -108,6 +108,30 @@ async function initDB() {
         depense REAL DEFAULT 0, statut TEXT DEFAULT 'planifie',
         notes TEXT, created_at TIMESTAMP DEFAULT NOW()
       )`,
+      `CREATE TABLE IF NOT EXISTS espoir_factures (
+        id SERIAL PRIMARY KEY, reference TEXT UNIQUE,
+        client_id INTEGER REFERENCES espoir_clients(id),
+        devis_id INTEGER REFERENCES espoir_devis(id),
+        montant_ht REAL DEFAULT 0, tva REAL DEFAULT 18,
+        montant_tva REAL DEFAULT 0, montant_ttc REAL DEFAULT 0,
+        statut TEXT DEFAULT 'brouillon',
+        date_emission DATE DEFAULT CURRENT_DATE,
+        date_echeance DATE, notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS espoir_facture_lignes (
+        id SERIAL PRIMARY KEY,
+        facture_id INTEGER REFERENCES espoir_factures(id) ON DELETE CASCADE,
+        designation TEXT, unite TEXT,
+        quantite REAL DEFAULT 1, prix_unitaire REAL DEFAULT 0, total REAL DEFAULT 0
+      )`,
+      `CREATE TABLE IF NOT EXISTS espoir_paiements (
+        id SERIAL PRIMARY KEY,
+        facture_id INTEGER REFERENCES espoir_factures(id) ON DELETE CASCADE,
+        montant REAL DEFAULT 0, mode_paiement TEXT DEFAULT 'virement',
+        date_paiement DATE, reference_paiement TEXT, notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
       `CREATE TABLE IF NOT EXISTS espoir_vehicules (
         id SERIAL PRIMARY KEY,
         immatriculation TEXT NOT NULL UNIQUE,
@@ -185,6 +209,27 @@ async function initDB() {
         date_fin_reelle TEXT, avancement INTEGER DEFAULT 0,
         budget REAL DEFAULT 0, depense REAL DEFAULT 0,
         statut TEXT DEFAULT 'planifie', notes TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS espoir_factures (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, reference TEXT UNIQUE,
+        client_id INTEGER, devis_id INTEGER,
+        montant_ht REAL DEFAULT 0, tva REAL DEFAULT 18,
+        montant_tva REAL DEFAULT 0, montant_ttc REAL DEFAULT 0,
+        statut TEXT DEFAULT 'brouillon',
+        date_emission TEXT DEFAULT (date('now')),
+        date_echeance TEXT, notes TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS espoir_facture_lignes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, facture_id INTEGER,
+        designation TEXT, unite TEXT,
+        quantite REAL DEFAULT 1, prix_unitaire REAL DEFAULT 0, total REAL DEFAULT 0
+      );
+      CREATE TABLE IF NOT EXISTS espoir_paiements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, facture_id INTEGER,
+        montant REAL DEFAULT 0, mode_paiement TEXT DEFAULT 'virement',
+        date_paiement TEXT, reference_paiement TEXT, notes TEXT,
         created_at TEXT DEFAULT (datetime('now'))
       );
       CREATE TABLE IF NOT EXISTS espoir_vehicules (
@@ -320,6 +365,28 @@ async function seedData() {
     );
   }
 
+
+  const factures = [
+    ['FAC-001-2025',1,5,52000000,18,9360000,61360000,'payee','2025-04-25','2025-05-25','Facture finale hangar Bohicon'],
+    ['FAC-002-2025',3,6,14200000,18,2556000,16756000,'payee','2025-04-20','2025-05-20','Groupes électrogènes BeninElec'],
+    ['FAC-003-2025',2,null,38500000,18,6930000,45430000,'envoyee','2025-05-01','2025-06-01','Transport matériaux LogiTrans'],
+    ['FAC-004-2025',4,null,74000000,18,13320000,87320000,'en_retard','2025-04-10','2025-05-10','Portiques portuaires PortCargo'],
+  ];
+  for (const f of factures) {
+    await db.runAsync(
+      'INSERT INTO espoir_factures (reference,client_id,devis_id,montant_ht,tva,montant_tva,montant_ttc,statut,date_emission,date_echeance,notes) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+      f
+    ).catch(()=>{});
+  }
+  // Paiements pour factures payées
+  await db.runAsync(
+    'INSERT INTO espoir_paiements (facture_id,montant,mode_paiement,date_paiement,reference_paiement) VALUES (?,?,?,?,?)',
+    [1,61360000,'virement','2025-05-20','VIR-20250520-001']
+  ).catch(()=>{});
+  await db.runAsync(
+    'INSERT INTO espoir_paiements (facture_id,montant,mode_paiement,date_paiement,reference_paiement) VALUES (?,?,?,?,?)',
+    [2,16756000,'cheque','2025-05-15','CHQ-20250515-001']
+  ).catch(()=>{});
 
   const vehicules = [
     ['TG-4821-BJ','Mercedes','Actros 2645','Camion gros porteur','30 tonnes','Koffi Adéchi','2025-08-15','disponible','Parfait état.'],

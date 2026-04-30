@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Comptabilité — Espoir Construction ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--navy-mid);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-lg);width:100%;max-width:780px;max-height:92vh;overflow-y:auto;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:var(--navy-mid);}
+.modal-header h3{font-family:var(--font-d);font-size:1.6rem;}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:flex-end;gap:10px;}
+
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;}
+.detail-overlay.open{display:block;}
+.detail-panel{position:fixed;top:0;right:0;bottom:0;width:580px;max-width:95vw;background:var(--navy-mid);border-left:1px solid rgba(255,255,255,.1);z-index:401;transform:translateX(100%);transition:transform .3s ease;overflow-y:auto;display:flex;flex-direction:column;}
+.detail-panel.open{transform:translateX(0);}
+.detail-panel-header{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:var(--navy-mid);}
+.detail-panel-header h3{font-family:var(--font-d);font-size:1.3rem;}
+.detail-panel-body{padding:22px;flex:1;display:flex;flex-direction:column;gap:18px;}
+.detail-panel-footer{padding:16px 22px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:8px;flex-wrap:wrap;}
+.section-title{font-family:var(--font-c);font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:10px;}
+
+/* LIGNES FACTURE */
+.ligne-row{display:grid;grid-template-columns:1fr 80px 80px 120px 30px;gap:8px;align-items:center;margin-bottom:8px;}
+.ligne-row input{font-size:.82rem;}
+.total-bar{background:var(--navy-light);border-radius:var(--r);padding:14px 18px;display:flex;justify-content:flex-end;gap:24px;flex-wrap:wrap;}
+.total-item{text-align:right;}
+.total-item .lbl{font-size:.72rem;color:var(--grey-mid);margin-bottom:2px;}
+.total-item .val{font-size:.9rem;font-weight:700;color:var(--white);}
+.total-item.grand .val{font-size:1.1rem;color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="erp-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.5"><path d="M2 20L12 4L22 20"/><path d="M6 20L12 10L18 20"/></svg></div>
+      <div><div class="logo-name">ESPOIR ERP</div><div class="logo-sub">Plateforme de gestion</div></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sideAvatar">—</div>
+      <div><div class="user-name" id="sideNom">—</div><div class="user-role" id="sideRole">—</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section">Principal</p>
+      <button class="nav-item" onclick="location.href='/dashboard'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
+      </button>
+      <p class="nav-section">Commercial</p>
+      <button class="nav-item" onclick="location.href='/devis'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>Devis &amp; Offres
+      </button>
+      <button class="nav-item" onclick="location.href='/clients'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Clients
+      </button>
+      <p class="nav-section">Opérations</p>
+      <button class="nav-item" onclick="location.href='/chantiers'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Chantiers
+      </button>
+      <button class="nav-item" onclick="location.href='/transport'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Transport
+      </button>
+      <p class="nav-section">Finance</p>
+      <button class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Comptabilité
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="sidebar-bottom-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Comptabilité</div>
+      <div class="topbar-bread">ERP · <span>Facturation & Paiements</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="user-avatar" id="topAvatar">—</div>
+        <div><div class="user-name" id="topNom">—</div><div class="user-role" id="topRole">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="erp-main">
+
+    <div class="page-header">
+      <div><h2>Facturation & Paiements</h2><p id="pageCount">Chargement...</p></div>
+      <div class="page-actions">
+        <button class="btn btn-sm btn-ghost" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exporter
+        </button>
+        <button class="btn btn-sm btn-amber" onclick="ouvrirModalFacture()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle Facture
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div></div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-label">Total Factures</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div></div><div class="kpi-value" id="kpi-ca-encaisse">—</div><div class="kpi-label">CA Encaissé FCFA</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="kpi-value" id="kpi-en-attente">—</div><div class="kpi-label">En Attente FCFA</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div><div class="kpi-value" id="kpi-retard">—</div><div class="kpi-label">En Retard</div></div>
+    </div>
+
+    <!-- Filtres -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <input class="filter-input" type="text" id="searchInput" placeholder="🔍 Référence, client..." oninput="chargerFactures()" style="min-width:220px;">
+      <select class="filter-select" id="filtreStatut" onchange="chargerFactures()">
+        <option value="">Tous les statuts</option>
+        <option value="brouillon">Brouillon</option>
+        <option value="envoyee">Envoyée</option>
+        <option value="payee">Payée</option>
+        <option value="en_retard">En retard</option>
+        <option value="annulee">Annulée</option>
+      </select>
+      <button class="btn btn-sm btn-ghost" onclick="resetFiltres()">Réinitialiser</button>
+    </div>
+
+    <!-- Tableau factures -->
+    <div id="mainContent">
+      <div class="loading-state"><div class="spinner"></div><p>Chargement...</p></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL NOUVELLE FACTURE -->
+<div class="modal-overlay" id="modalFacture">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nouvelle Facture</h3>
+      <button class="btn btn-sm btn-ghost" onclick="fermerModal('modalFacture')" style="padding:6px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client *</label>
+          <select id="fClient"><option value="">-- Sélectionner --</option></select>
+        </div>
+        <div class="form-group">
+          <label>Devis associé (optionnel)</label>
+          <select id="fDevis"><option value="">-- Aucun --</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date d'échéance</label>
+          <input type="date" id="fEcheance">
+        </div>
+        <div class="form-group">
+          <label>TVA (%)</label>
+          <input type="number" id="fTVA" value="18" min="0" max="100">
+        </div>
+      </div>
+
+      <!-- Lignes de facturation -->
+      <div style="margin:18px 0 10px;">
+        <div class="section-title">Lignes de facturation</div>
+        <div style="display:grid;grid-template-columns:1fr 80px 80px 120px 30px;gap:8px;margin-bottom:8px;">
+          <span style="font-family:var(--font-c);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-dark);">Désignation</span>
+          <span style="font-family:var(--font-c);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-dark);">Unité</span>
+          <span style="font-family:var(--font-c);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-dark);">Qté</span>
+          <span style="font-family:var(--font-c);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-dark);">Prix Unit.</span>
+          <span></span>
+        </div>
+        <div id="lignesContainer"></div>
+        <button class="btn btn-sm btn-ghost" onclick="ajouterLigne()" style="margin-top:8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter une ligne
+        </button>
+      </div>
+
+      <!-- Totaux -->
+      <div class="total-bar" id="totalBar">
+        <div class="total-item"><div class="lbl">HT</div><div class="val" id="totalHT">0 FCFA</div></div>
+        <div class="total-item"><div class="lbl">TVA (18%)</div><div class="val" id="totalTVA">0 FCFA</div></div>
+        <div class="total-item grand"><div class="lbl">Total TTC</div><div class="val" id="totalTTC">0 FCFA</div></div>
+      </div>
+
+      <div class="form-group" style="margin-top:14px;">
+        <label>Notes</label>
+        <textarea id="fNotes" placeholder="Conditions de paiement, remarques..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-ghost" onclick="fermerModal('modalFacture')">Annuler</button>
+      <button class="btn btn-sm btn-amber" onclick="sauvegarderFacture()">Créer la Facture</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PAIEMENT -->
+<div class="modal-overlay" id="modalPaiement">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h3>Enregistrer un Paiement</h3>
+      <button class="btn btn-sm btn-ghost" onclick="fermerModal('modalPaiement')" style="padding:6px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pFactureId">
+      <div class="form-group">
+        <label>Montant reçu (FCFA) *</label>
+        <input type="number" id="pMontant" placeholder="0">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Mode de paiement</label>
+          <select id="pMode">
+            <option value="virement">Virement bancaire</option>
+            <option value="cheque">Chèque</option>
+            <option value="especes">Espèces</option>
+            <option value="mobile_money">Mobile Money</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date de paiement</label>
+          <input type="date" id="pDate">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Référence / N° de transaction</label>
+        <input type="text" id="pRef" placeholder="VIR-20250601-001">
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="pNotes" placeholder="Observations..." style="min-height:70px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-ghost" onclick="fermerModal('modalPaiement')">Annuler</button>
+      <button class="btn btn-sm btn-amber" onclick="enregistrerPaiement()">Confirmer le Paiement</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL FACTURE -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-panel-header">
+    <h3 id="detailRef">—</h3>
+    <button class="btn btn-sm btn-ghost" onclick="closeDetail()" style="padding:6px 10px;">✕</button>
+  </div>
+  <div class="detail-panel-body" id="detailBody"></div>
+  <div class="detail-panel-footer" id="detailFooter"></div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let allFactures = [];
+let allClients  = [];
+let ligneCount  = 0;
+
+function formatFCFA(n) {
+  if (!n && n!==0) return '—';
+  n = parseFloat(n);
+  if (n>=1e9) return (n/1e9).toFixed(1)+' Md FCFA';
+  if (n>=1e6) return (n/1e6).toFixed(1)+'M FCFA';
+  return n.toLocaleString('fr-FR')+' FCFA';
+}
+function formatDate(d) { if(!d)return'—'; const s=d.split('T')[0].split('-'); return`${s[2]}/${s[1]}/${s[0]}`; }
+function initials(n){return(n||'??').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();}
+function roleLabel(r){return{admin:'Administrateur',directeur:'Directeur Général',comptable:'Comptable',technicien:'Technicien',client:'Client'}[r]||r;}
+
+const STATUT = {
+  brouillon: { label:'Brouillon',  cls:'badge-grey'   },
+  envoyee:   { label:'Envoyée',    cls:'badge-blue'   },
+  payee:     { label:'Payée ✓',   cls:'badge-green'  },
+  en_retard: { label:'En Retard',  cls:'badge-red'    },
+  annulee:   { label:'Annulée',    cls:'badge-grey'   },
+};
+function badge(s){const b=STATUT[s]||{label:s,cls:'badge-grey'};return`<span class="badge ${b.cls}">${b.label}</span>`;}
+
+function showToast(type,title,msg){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-icon"></div><div class="toast-text"><strong>${title}</strong><p>${msg}</p></div>`;
+  $('toast-container').appendChild(t);
+  setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300);},3500);
+}
+
+async function checkAuth(){
+  const res=await fetch('/api/auth/me');
+  const data=await res.json();
+  if(!data.ok){window.location.href='/login';return;}
+  const av=initials(data.user.prenom+' '+data.user.nom);
+  const rl=roleLabel(data.user.role);
+  const nm=data.user.prenom+' '+data.user.nom;
+  $('sideAvatar').textContent=av;$('sideNom').textContent=nm;$('sideRole').textContent=rl;
+  $('topAvatar').textContent=av;$('topNom').textContent=nm;$('topRole').textContent=rl;
+}
+async function logout(){await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login';}
+
+async function chargerKPIs(){
+  const res=await fetch('/api/comptabilite/stats');
+  const data=await res.json();
+  if(!data.ok)return;
+  const s=data.stats;
+  $('kpi-total').textContent=s.total_factures;
+  $('kpi-ca-encaisse').textContent=formatFCFA(s.ca_encaisse);
+  $('kpi-en-attente').textContent=formatFCFA(s.ca_en_attente);
+  $('kpi-retard').textContent=s.en_retard;
+}
+
+async function chargerFactures(){
+  const q=$('searchInput').value;
+  const statut=$('filtreStatut').value;
+  let url='/api/comptabilite/factures?';
+  if(q) url+=`q=${encodeURIComponent(q)}&`;
+  if(statut) url+=`statut=${statut}&`;
+  const res=await fetch(url);
+  const data=await res.json();
+  if(!data.ok)return;
+  allFactures=data.factures;
+  $('pageCount').textContent=`${data.factures.length} facture${data.factures.length>1?'s':''}`;
+
+  if(!data.factures.length){
+    $('mainContent').innerHTML='<div class="empty-state"><p>Aucune facture trouvée</p></div>';
+    return;
+  }
+
+  $('mainContent').innerHTML=`<div class="card"><div class="table-wrap"><table>
+    <thead><tr><th>Référence</th><th>Client</th><th>Montant HT</th><th>TVA</th><th>Total TTC</th><th>Échéance</th><th>Statut</th><th>Actions</th></tr></thead>
+    <tbody>${data.factures.map(f=>`
+      <tr style="cursor:pointer;" onclick="ouvrirDetail(${f.id})">
+        <td><strong style="font-family:var(--font-c);color:var(--amber);">${f.reference}</strong></td>
+        <td>${f.client_nom||'—'}</td>
+        <td>${parseFloat(f.montant_ht||0).toLocaleString('fr-FR')}</td>
+        <td>${parseFloat(f.tva||18)}%</td>
+        <td><strong>${parseFloat(f.montant_ttc||0).toLocaleString('fr-FR')}</strong></td>
+        <td style="color:${f.statut==='en_retard'?'var(--red)':'inherit'}">${formatDate(f.date_echeance)}</td>
+        <td>${badge(f.statut)}</td>
+        <td onclick="event.stopPropagation()">
+          <div style="display:flex;gap:5px;">
+            <button class="btn btn-sm btn-ghost" style="padding:3px 8px;font-size:.68rem;" onclick="ouvrirDetail(${f.id})">Voir</button>
+            ${f.statut!=='payee'&&f.statut!=='annulee'?`<button class="btn btn-sm btn-ghost" style="padding:3px 8px;font-size:.68rem;" onclick="ouvrirPaiement(${f.id})">Paiement</button>`:''}
+            <button class="btn btn-sm btn-ghost" style="padding:3px 8px;font-size:.68rem;" onclick="imprimerFacture(${f.id})">PDF</button>
+          </div>
+        </td>
+      </tr>`).join('')}
+    </tbody></table></div>
+    <div class="table-footer"><span class="table-footer-info">${data.factures.length} facture${data.factures.length>1?'s':''}</span></div>
+  </div>`;
+}
+
+// MODAL FACTURE
+async function ouvrirModalFacture(){
+  // Peupler clients
+  const rc=await fetch('/api/clients');
+  const dc=await rc.json();
+  if(dc.ok){
+    $('fClient').innerHTML='<option value="">-- Sélectionner --</option>';
+    dc.clients.forEach(c=>{
+      const o=document.createElement('option');
+      o.value=c.id;o.textContent=c.nom;$('fClient').appendChild(o);
+    });
+  }
+  // Peupler devis acceptés
+  const rd=await fetch('/api/comptabilite/devis-acceptes');
+  const dd=await rd.json();
+  if(dd.ok){
+    $('fDevis').innerHTML='<option value="">-- Aucun --</option>';
+    dd.devis.forEach(d=>{
+      const o=document.createElement('option');
+      o.value=d.id;o.textContent=`${d.reference} — ${d.client_nom||'?'} — ${parseFloat(d.montant_ht).toLocaleString('fr-FR')} FCFA`;
+      $('fDevis').appendChild(o);
+    });
+  }
+  // Ligne par défaut
+  $('lignesContainer').innerHTML='';
+  ligneCount=0;
+  ajouterLigne();
+  $('modalFacture').classList.add('open');
+}
+function fermerModal(id){$(id).classList.remove('open');}
+
+function ajouterLigne(){
+  const id='ligne_'+ligneCount++;
+  const div=document.createElement('div');
+  div.className='ligne-row';
+  div.id=id;
+  div.innerHTML=`
+    <input type="text" class="l-desig" placeholder="Description des travaux..." oninput="recalculer()">
+    <input type="text" class="l-unite" placeholder="U / m² / T" oninput="recalculer()">
+    <input type="number" class="l-qte" placeholder="1" min="0" step="0.01" oninput="recalculer()">
+    <input type="number" class="l-pu" placeholder="0" min="0" step="1000" oninput="recalculer()">
+    <button onclick="document.getElementById('${id}').remove();recalculer();" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:1rem;">✕</button>
+  `;
+  $('lignesContainer').appendChild(div);
+}
+
+function recalculer(){
+  const tva=parseFloat($('fTVA').value)||18;
+  let ht=0;
+  document.querySelectorAll('#lignesContainer .ligne-row').forEach(row=>{
+    const qte=parseFloat(row.querySelector('.l-qte')?.value)||0;
+    const pu=parseFloat(row.querySelector('.l-pu')?.value)||0;
+    ht+=qte*pu;
+  });
+  const tvaM=ht*tva/100;
+  const ttc=ht+tvaM;
+  $('totalHT').textContent=ht.toLocaleString('fr-FR')+' FCFA';
+  $('totalTVA').textContent=tvaM.toLocaleString('fr-FR')+' FCFA';
+  $('totalTTC').textContent=ttc.toLocaleString('fr-FR')+' FCFA';
+}
+
+async function sauvegarderFacture(){
+  const client_id=$('fClient').value;
+  if(!client_id){showToast('warning','Requis','Sélectionnez un client.');return;}
+  const lignes=[];
+  document.querySelectorAll('#lignesContainer .ligne-row').forEach(row=>{
+    const desig=row.querySelector('.l-desig')?.value.trim();
+    if(desig) lignes.push({
+      designation:desig,
+      unite:row.querySelector('.l-unite')?.value.trim()||'',
+      quantite:parseFloat(row.querySelector('.l-qte')?.value)||1,
+      prix_unitaire:parseFloat(row.querySelector('.l-pu')?.value)||0,
+    });
+  });
+  if(!lignes.length){showToast('warning','Requis','Ajoutez au moins une ligne.');return;}
+  const body={
+    client_id,
+    devis_id:$('fDevis').value||null,
+    tva:parseFloat($('fTVA').value)||18,
+    date_echeance:$('fEcheance').value||null,
+    notes:$('fNotes').value.trim(),
+    lignes,
+  };
+  const res=await fetch('/api/comptabilite/factures',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await res.json();
+  if(data.ok){
+    showToast('success','Facture créée',data.reference);
+    fermerModal('modalFacture');
+    await chargerFactures();await chargerKPIs();
+  } else { showToast('error','Erreur',data.error||'Impossible de créer la facture.'); }
+}
+
+// DETAIL FACTURE
+async function ouvrirDetail(id){
+  $('detailOverlay').classList.add('open');
+  $('detailPanel').classList.add('open');
+  $('detailRef').textContent='Chargement...';
+  $('detailBody').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
+
+  const res=await fetch(`/api/comptabilite/factures/${id}`);
+  const data=await res.json();
+  if(!data.ok)return;
+  const f=data.facture;
+  const lignes=data.lignes||[];
+  const paiements=data.paiements||[];
+  const totalPaye=paiements.reduce((s,p)=>s+parseFloat(p.montant||0),0);
+  const resteAPayer=parseFloat(f.montant_ttc||0)-totalPaye;
+
+  $('detailRef').textContent=f.reference;
+
+  $('detailBody').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+      <div>
+        <div style="font-size:1rem;font-weight:700;">${f.client_nom||'—'}</div>
+        <div style="font-size:.8rem;color:var(--grey-mid);">Émise le ${formatDate(f.date_emission)} · Échéance ${formatDate(f.date_echeance)}</div>
+      </div>
+      ${badge(f.statut)}
+    </div>
+
+    <!-- Montants -->
+    <div style="background:var(--navy-light);border-radius:var(--r);padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div><div style="font-size:.72rem;color:var(--grey-mid);">Montant HT</div><div style="font-size:1rem;font-weight:700;">${parseFloat(f.montant_ht||0).toLocaleString('fr-FR')} FCFA</div></div>
+      <div><div style="font-size:.72rem;color:var(--grey-mid);">TVA (${f.tva}%)</div><div style="font-size:1rem;font-weight:700;">${parseFloat(f.montant_tva||0).toLocaleString('fr-FR')} FCFA</div></div>
+      <div><div style="font-size:.72rem;color:var(--grey-mid);">Total TTC</div><div style="font-size:1.2rem;font-weight:900;color:var(--amber);">${parseFloat(f.montant_ttc||0).toLocaleString('fr-FR')} FCFA</div></div>
+      <div><div style="font-size:.72rem;color:var(--grey-mid);">Reste à payer</div><div style="font-size:1.2rem;font-weight:900;color:${resteAPayer<=0?'var(--green)':'var(--red)'};">${Math.max(0,resteAPayer).toLocaleString('fr-FR')} FCFA</div></div>
+    </div>
+
+    ${lignes.length?`
+    <div>
+      <div class="section-title">Lignes (${lignes.length})</div>
+      <div style="background:var(--navy-light);border-radius:var(--r);overflow:hidden;">
+        ${lignes.map(l=>`
+          <div style="padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;">
+            <div>
+              <div style="font-size:.84rem;font-weight:600;">${l.designation}</div>
+              <div style="font-size:.72rem;color:var(--grey-mid);">${l.quantite} ${l.unite||'U'} × ${parseFloat(l.prix_unitaire).toLocaleString('fr-FR')} FCFA</div>
+            </div>
+            <div style="font-size:.84rem;font-weight:700;color:var(--white);">${parseFloat(l.total).toLocaleString('fr-FR')} FCFA</div>
+          </div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    <div>
+      <div class="section-title">Paiements reçus (${paiements.length})</div>
+      ${paiements.length?`<div style="display:flex;flex-direction:column;gap:7px;">
+        ${paiements.map(p=>`
+          <div style="background:var(--navy-light);border-radius:var(--r);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:.84rem;font-weight:600;color:var(--green);">+${parseFloat(p.montant).toLocaleString('fr-FR')} FCFA</div>
+              <div style="font-size:.72rem;color:var(--grey-mid);">${p.mode_paiement} · ${formatDate(p.date_paiement)} ${p.reference_paiement?'· '+p.reference_paiement:''}</div>
+            </div>
+          </div>`).join('')}
+      </div>` : '<p style="font-size:.84rem;color:var(--grey-mid);">Aucun paiement enregistré.</p>'}
+    </div>
+
+    ${f.notes?`<div><div class="section-title">Notes</div><p style="font-size:.83rem;color:var(--grey-light);line-height:1.7;background:var(--navy-light);padding:12px;border-radius:var(--r);">${f.notes}</p></div>`:''}
+  `;
+
+  $('detailFooter').innerHTML=`
+    ${f.statut!=='payee'&&f.statut!=='annulee'?`<button class="btn btn-sm btn-amber" onclick="ouvrirPaiement(${f.id})">Enregistrer Paiement</button>`:''}
+    <button class="btn btn-sm btn-ghost" onclick="imprimerFacture(${f.id})">Imprimer PDF</button>
+    ${f.statut==='brouillon'?`<button class="btn btn-sm btn-ghost" onclick="changerStatut(${f.id},'envoyee')">Marquer Envoyée</button>`:''}
+    ${f.statut!=='annulee'&&f.statut!=='payee'?`<button class="btn btn-sm btn-danger" onclick="changerStatut(${f.id},'annulee')">Annuler</button>`:''}
+  `;
+  window._factureCourante = data;
+}
+
+function closeDetail(){
+  $('detailOverlay').classList.remove('open');
+  $('detailPanel').classList.remove('open');
+}
+
+async function changerStatut(id,statut){
+  const res=await fetch(`/api/comptabilite/factures/${id}/statut`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({statut})});
+  const data=await res.json();
+  if(data.ok){showToast('success','Statut mis à jour','');closeDetail();await chargerFactures();await chargerKPIs();}
+}
+
+// PAIEMENT
+function ouvrirPaiement(id){
+  $('pFactureId').value=id;
+  $('pMontant').value='';
+  $('pDate').value=new Date().toISOString().split('T')[0];
+  $('pRef').value='';
+  $('pNotes').value='';
+  $('modalPaiement').classList.add('open');
+}
+
+async function enregistrerPaiement(){
+  const id=$('pFactureId').value;
+  const montant=$('pMontant').value;
+  if(!montant||parseFloat(montant)<=0){showToast('warning','Requis','Entrez un montant valide.');return;}
+  const body={
+    montant:parseFloat(montant),
+    mode_paiement:$('pMode').value,
+    date_paiement:$('pDate').value||null,
+    reference_paiement:$('pRef').value.trim(),
+    notes:$('pNotes').value.trim(),
+  };
+  const res=await fetch(`/api/comptabilite/factures/${id}/paiement`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await res.json();
+  if(data.ok){
+    showToast('success','Paiement enregistré',parseFloat(montant).toLocaleString('fr-FR')+' FCFA');
+    fermerModal('modalPaiement');closeDetail();
+    await chargerFactures();await chargerKPIs();
+  } else { showToast('error','Erreur',data.error||'Erreur paiement.'); }
+}
+
+// IMPRESSION PDF
+async function imprimerFacture(id){
+  const res=await fetch(`/api/comptabilite/factures/${id}`);
+  const data=await res.json();
+  if(!data.ok)return;
+  const f=data.facture;
+  const lignes=data.lignes||[];
+  const win=window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Facture ${f.reference}</title>
+  <style>
+    *{box-sizing:border-box;}body{font-family:Arial,sans-serif;font-size:12px;color:#222;padding:40px 50px;max-width:800px;margin:0 auto;}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px;padding-bottom:20px;border-bottom:3px solid #f5a623;}
+    .logo-name{font-size:22px;font-weight:900;letter-spacing:2px;color:#0b1220;}
+    .logo-sub{font-size:10px;color:#999;letter-spacing:1px;text-transform:uppercase;}
+    .facture-ref{font-size:20px;font-weight:900;color:#f5a623;}
+    .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+    .badge-green{background:#d1fae5;color:#065f46;}.badge-blue{background:#dbeafe;color:#1e40af;}.badge-red{background:#fee2e2;color:#991b1b;}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:20px 0;}
+    .field .l{font-size:9px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
+    .field .v{font-size:12px;font-weight:600;}
+    table{width:100%;border-collapse:collapse;margin:20px 0;}
+    th{background:#f5f5f5;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#666;}
+    td{padding:8px 10px;border-bottom:1px solid #f0f0f0;font-size:11px;}
+    .totals{display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:10px;}
+    .total-row{display:flex;gap:40px;font-size:11px;}
+    .total-row .lbl{color:#666;}.total-row .val{font-weight:700;text-align:right;min-width:120px;}
+    .total-row.grand .val{font-size:14px;color:#f5a623;}
+    .footer{margin-top:40px;padding-top:16px;border-top:1px solid #eee;font-size:10px;color:#999;text-align:center;}
+    @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}
+  </style></head><body>
+  <div class="header">
+    <div><div class="logo-name">ESPOIR CONSTRUCTION</div><div class="logo-sub">Construction Métallique · Génie Civil · Transport · Manutention</div><div style="margin-top:8px;font-size:10px;color:#666;">Cotonou, Bénin · contact@espoir-construction.bj</div></div>
+    <div style="text-align:right;"><div class="facture-ref">${f.reference}</div><div style="margin-top:5px;">${f.statut==='payee'?'<span class="badge badge-green">Payée</span>':f.statut==='en_retard'?'<span class="badge badge-red">En Retard</span>':'<span class="badge badge-blue">'+f.statut+'</span>'}</div></div>
+  </div>
+  <div class="grid2">
+    <div><div style="font-size:10px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Facturé à</div><div style="font-weight:700;font-size:13px;">${f.client_nom||'—'}</div>${f.client_ville?`<div style="color:#666;">${f.client_ville}</div>`:''}${f.client_tel?`<div style="color:#666;">${f.client_tel}</div>`:''}</div>
+    <div>
+      <div class="field" style="margin-bottom:8px;"><div class="l">Date d'émission</div><div class="v">${formatDate(f.date_emission)}</div></div>
+      <div class="field" style="margin-bottom:8px;"><div class="l">Date d'échéance</div><div class="v" style="color:${f.statut==='en_retard'?'#dc2626':'inherit'};">${formatDate(f.date_echeance)}</div></div>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th>Désignation</th><th>Unité</th><th style="text-align:right;">Qté</th><th style="text-align:right;">Prix Unit. (FCFA)</th><th style="text-align:right;">Total (FCFA)</th></tr></thead>
+    <tbody>${lignes.map(l=>`<tr><td>${l.designation}</td><td>${l.unite||'U'}</td><td style="text-align:right;">${l.quantite}</td><td style="text-align:right;">${parseFloat(l.prix_unitaire).toLocaleString('fr-FR')}</td><td style="text-align:right;font-weight:700;">${parseFloat(l.total).toLocaleString('fr-FR')}</td></tr>`).join('')}</tbody>
+  </table>
+  <div class="totals">
+    <div class="total-row"><span class="lbl">Montant HT</span><span class="val">${parseFloat(f.montant_ht||0).toLocaleString('fr-FR')} FCFA</span></div>
+    <div class="total-row"><span class="lbl">TVA (${f.tva}%)</span><span class="val">${parseFloat(f.montant_tva||0).toLocaleString('fr-FR')} FCFA</span></div>
+    <div class="total-row grand"><span class="lbl"><strong>TOTAL TTC</strong></span><span class="val">${parseFloat(f.montant_ttc||0).toLocaleString('fr-FR')} FCFA</span></div>
+  </div>
+  ${f.notes?`<div style="margin-top:20px;padding:12px;background:#fafafa;border-radius:4px;border-left:3px solid #f5a623;font-size:11px;color:#555;">${f.notes}</div>`:''}
+  <div class="footer">Espoir Construction — RCCM : BJ-COT-01-2020-B14-XXXX — NIF : XXXXXXXX · ${f.reference} · Généré le ${new Date().toLocaleDateString('fr-FR')}</div>
+  <script>window.onload=()=>window.print();<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+function exportCSV(){
+  if(!allFactures.length){showToast('warning','Export','Aucune facture.');return;}
+  const header=['Référence','Client','Montant HT','TVA','Total TTC','Statut','Émission','Échéance'];
+  const rows=allFactures.map(f=>[f.reference,f.client_nom||'',f.montant_ht,f.tva,f.montant_ttc,f.statut,f.date_emission,f.date_echeance]);
+  const csv=[header,...rows].map(r=>r.map(v=>`"${v||''}"`).join(';')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`factures-espoir-${new Date().toISOString().split('T')[0]}.csv`;a.click();
+  showToast('success','Export','Fichier CSV téléchargé.');
+}
+
+function resetFiltres(){$('searchInput').value='';$('filtreStatut').value='';chargerFactures();}
+
+(async()=>{
+  await checkAuth();
+  await Promise.all([chargerKPIs(),chargerFactures()]);
+})();
+</script>
+</body>
+</html>
