@@ -1,0 +1,15 @@
+{
+  "name": "espoir-erp",
+  "version": "2.0.0",
+  "description": "Plateforme ERP - Espoir Construction",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.18.3",
+    "express-session": "^1.18.0",
+    "sqlite3": "^5.1.7"
+  }
+}

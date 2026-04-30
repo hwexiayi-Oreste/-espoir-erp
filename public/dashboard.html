@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Espoir Construction ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div class="erp-layout">
+
+  <!-- ========================
+       SIDEBAR
+       ======================== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 20L12 4L22 20"/><path d="M6 20L12 10L18 20"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-name">ESPOIR ERP</div>
+        <div class="logo-sub">Plateforme de gestion</div>
+      </div>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sideAvatar">—</div>
+      <div>
+        <div class="user-name"  id="sideNom">Chargement...</div>
+        <div class="user-role"  id="sideRole">—</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-section">Principal</p>
+      <button class="nav-item active" onclick="navTo(this,'dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+
+      <p class="nav-section">Commercial</p>
+      <button class="nav-item" onclick="navTo(this,'devis')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Devis &amp; Offres
+        <span class="nav-badge amber" id="navBadgeDevis">—</span>
+      </button>
+      <button class="nav-item" onclick="navTo(this,'clients')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Clients
+      </button>
+
+      <p class="nav-section">Opérations</p>
+      <button class="nav-item" onclick="navTo(this,'chantiers')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        Chantiers
+        <span class="nav-badge red" id="navBadgeChantiers">—</span>
+      </button>
+      <button class="nav-item" style="opacity:.5;cursor:not-allowed;" title="Module en développement">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Transport
+        <span class="nav-badge grey" style="background:rgba(90,112,144,.15);color:var(--grey-mid);">Bientôt</span>
+      </button>
+      <button class="nav-item" style="opacity:.5;cursor:not-allowed;" title="Module en développement">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        Manutention
+        <span class="nav-badge grey" style="background:rgba(90,112,144,.15);color:var(--grey-mid);">Bientôt</span>
+      </button>
+
+      <p class="nav-section">Administration</p>
+      <button class="nav-item" style="opacity:.5;cursor:not-allowed;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Comptabilité
+        <span class="nav-badge grey" style="background:rgba(90,112,144,.15);color:var(--grey-mid);">Bientôt</span>
+      </button>
+      <button class="nav-item" style="opacity:.5;cursor:not-allowed;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M6.34 6.34L4.93 4.93"/><circle cx="12" cy="12" r="9"/></svg>
+        Paramètres
+        <span class="nav-badge grey" style="background:rgba(90,112,144,.15);color:var(--grey-mid);">Bientôt</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <button class="sidebar-bottom-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================
+       TOPBAR
+       ======================== -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="topTitle">Dashboard</div>
+      <div class="topbar-bread">ERP · <span id="topBread">Vue générale</span></div>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-icon-btn" title="Notifications" onclick="showToast('info','Notifications','Vous avez ' + (window._alertesCount||0) + ' alertes non lues.')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-dot" id="notifDot" style="display:none;"></span>
+      </button>
+      <div class="topbar-user">
+        <div class="user-avatar" id="topAvatar">—</div>
+        <div>
+          <div class="user-name" id="topNom">—</div>
+          <div class="user-role" id="topRole">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================
+       MAIN
+       ======================== -->
+  <main class="erp-main" id="mainContent">
+    <!-- Rempli dynamiquement par JS -->
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement du tableau de bord...</p>
+    </div>
+  </main>
+
+</div><!-- /erp-layout -->
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<script>
+// ============================================================
+//  HELPERS
+// ============================================================
+const $ = id => document.getElementById(id);
+
+function formatFCFA(n) {
+  if (!n && n !== 0) return '—';
+  if (n >= 1e9) return (n/1e9).toFixed(1) + ' Md';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  return n.toLocaleString('fr-FR');
+}
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '—';
+  const d    = new Date(dateStr.replace(' ','T'));
+  const diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60)   return 'À l\'instant';
+  if (diff < 3600) return 'Il y a ' + Math.floor(diff/60) + ' min';
+  if (diff < 86400)return 'Il y a ' + Math.floor(diff/3600) + 'h';
+  return 'Il y a ' + Math.floor(diff/86400) + ' j';
+}
+
+function badgeDevis(statut) {
+  const map = {
+    brouillon:      'badge-grey',
+    en_attente:     'badge-amber',
+    envoye:         'badge-blue',
+    expire_bientot: 'badge-red',
+    accepte:        'badge-green',
+    refuse:         'badge-red',
+    expire:         'badge-grey',
+  };
+  const labels = {
+    brouillon:'Brouillon', en_attente:'En attente', envoye:'Envoyé',
+    expire_bientot:'Expire bientôt', accepte:'Accepté', refuse:'Refusé', expire:'Expiré'
+  };
+  return `<span class="badge ${map[statut]||'badge-grey'}">${labels[statut]||statut}</span>`;
+}
+
+function badgeChantier(statut) {
+  const map    = {en_cours:'badge-green', retard:'badge-red', planifie:'badge-blue', livre:'badge-grey'};
+  const labels = {en_cours:'En cours', retard:'Retard', planifie:'Planifié', livre:'Livré'};
+  return `<span class="badge ${map[statut]||'badge-grey'}">${labels[statut]||statut}</span>`;
+}
+
+function progressColor(pct) {
+  if (pct >= 80) return 'green';
+  if (pct >= 40) return 'amber';
+  return 'blue';
+}
+
+function roleLabel(role) {
+  const m = {admin:'Administrateur', directeur:'Directeur Général', comptable:'Comptable', technicien:'Technicien', client:'Client'};
+  return m[role] || role;
+}
+
+function initials(prenom, nom) {
+  return ((prenom||'')[0]||(nom||'')[0]||'?').toUpperCase() + ((nom||'')[0]||(prenom||'')[1]||'?').toUpperCase();
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+function showToast(type, title, msg) {
+  const icons = {
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-icon">${icons[type]||icons.info}</div><div class="toast-text"><strong>${title}</strong><p>${msg}</p></div>`;
+  $('toast-container').appendChild(t);
+  setTimeout(() => {
+    t.classList.add('removing');
+    setTimeout(() => t.remove(), 300);
+  }, 3500);
+}
+
+// ============================================================
+//  AUTH
+// ============================================================
+let currentUser = null;
+
+async function checkAuth() {
+  const res  = await fetch('/api/auth/me');
+  const data = await res.json();
+  if (!data.ok) { window.location.href = '/login'; return; }
+  currentUser = data.user;
+  setUserUI();
+}
+
+function setUserUI() {
+  const u  = currentUser;
+  const av = initials(u.prenom, u.nom);
+  const rl = roleLabel(u.role);
+  const nm = u.prenom + ' ' + u.nom;
+
+  $('sideAvatar').textContent = av;
+  $('sideNom').textContent    = nm;
+  $('sideRole').textContent   = rl;
+  $('topAvatar').textContent  = av;
+  $('topNom').textContent     = nm;
+  $('topRole').textContent    = rl;
+}
+
+async function logout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/login';
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+const pages = {
+  dashboard: { title: 'Dashboard',      bread: 'Vue générale' },
+  devis:     { title: 'Devis & Offres', bread: 'Gestion commerciale' },
+  clients:   { title: 'Clients',        bread: 'Répertoire clients' },
+  chantiers: { title: 'Chantiers',      bread: 'Suivi opérationnel' },
+};
+
+function navTo(btn, page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const p = pages[page] || { title: page, bread: '' };
+  $('topTitle').textContent = p.title;
+  $('topBread').textContent = p.bread;
+  loadPage(page);
+}
+
+async function loadPage(page) {
+  const main = $('mainContent');
+  main.innerHTML = `<div class="loading-state"><div class="spinner"></div><p>Chargement...</p></div>`;
+  if (page === 'dashboard') await renderDashboard();
+  else main.innerHTML = `<div class="empty-state" style="margin-top:60px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p>Module <strong>${page}</strong> — en développement.<br>Il sera disponible dans la prochaine version.</p></div>`;
+}
+
+// ============================================================
+//  DASHBOARD
+// ============================================================
+window._alertesCount = 0;
+
+async function renderDashboard() {
+  const res  = await fetch('/api/dashboard');
+  if (res.status === 401) { window.location.href = '/login'; return; }
+  const data = await res.json();
+  if (!data.ok) { showToast('error', 'Erreur', 'Impossible de charger les données.'); return; }
+
+  const { kpis, derniers_devis, chantiers, alertes, activite, stats_devis } = data;
+
+  window._alertesCount = alertes.filter(a => !a.lu).length;
+  if (window._alertesCount > 0) $('notifDot').style.display = '';
+
+  // Badges sidebar
+  $('navBadgeDevis').textContent     = kpis.devis_en_attente;
+  $('navBadgeChantiers').textContent = kpis.chantiers_retard > 0 ? kpis.chantiers_retard : '';
+  if (!kpis.chantiers_retard) $('navBadgeChantiers').style.display = 'none';
+
+  // ---- RENDER ----
+  $('mainContent').innerHTML = `
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h2>Tableau de Bord</h2>
+        <p id="dashDate">Chargement de la date...</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-sm btn-ghost" onclick="renderDashboard()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          Actualiser
+        </button>
+        <button class="btn btn-sm btn-amber" onclick="showToast('info','Nouveau Devis','Formulaire de création — disponible dans le module Devis.')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouveau Devis
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+          <span class="kpi-badge up">↑ Actif</span>
+        </div>
+        <div class="kpi-value">${formatFCFA(kpis.pipeline_fcfa)}</div>
+        <div class="kpi-label">Pipeline Commercial FCFA</div>
+        <div class="kpi-sub">Devis en cours · CA accepté : ${formatFCFA(kpis.ca_acceptes)}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <span class="kpi-badge warn">${kpis.devis_expire_bientot} urgent${kpis.devis_expire_bientot>1?'s':''}</span>
+        </div>
+        <div class="kpi-value">${kpis.devis_en_attente}</div>
+        <div class="kpi-label">Devis en Attente</div>
+        <div class="kpi-sub">${kpis.devis_expire_bientot} expirant bientôt</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+          <span class="kpi-badge ${kpis.chantiers_retard>0?'down':'up'}">${kpis.chantiers_retard} retard${kpis.chantiers_retard>1?'s':''}</span>
+        </div>
+        <div class="kpi-value">${kpis.chantiers_actifs}</div>
+        <div class="kpi-label">Chantiers Actifs</div>
+        <div class="kpi-sub">${kpis.chantiers_actifs - kpis.chantiers_retard} dans les délais</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top">
+          <div class="kpi-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <span class="kpi-badge up">${kpis.prospects} prospects</span>
+        </div>
+        <div class="kpi-value">${kpis.clients_actifs}</div>
+        <div class="kpi-label">Clients Actifs</div>
+        <div class="kpi-sub">${kpis.prospects} prospects en cours</div>
+      </div>
+    </div>
+
+    <!-- Row 1 : Alertes + Activité -->
+    <div class="grid-2" style="margin-bottom:16px;">
+
+      <!-- Alertes -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            Alertes &amp; Notifications
+          </div>
+          <span class="badge badge-red">${window._alertesCount} nouvelle${window._alertesCount>1?'s':''}</span>
+        </div>
+        <div class="card-body" style="padding-top:6px;">
+          <div class="alert-list">
+            ${alertes.map(a => `
+              <div class="alert-item ${a.lu?'lu':''}" onclick="markAlertRead(${a.id}, this)">
+                <div class="alert-ic ${a.type}">
+                  ${alertIcon(a.type)}
+                </div>
+                <div style="flex:1;">
+                  <div class="alert-title">${a.titre}</div>
+                  <div class="alert-msg">${a.message||''}</div>
+                </div>
+                <span class="alert-time">${timeAgo(a.created_at)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <!-- Activité -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Activité Récente
+          </div>
+          <span style="font-size:.74rem;color:var(--grey-mid);">Dernières actions</span>
+        </div>
+        <div class="card-body" style="padding-top:8px;">
+          <div class="timeline">
+            ${activite.map((a, i) => `
+              <div class="tl-item">
+                <div class="tl-left">
+                  <div class="tl-dot ${['green','amber','blue','amber','green','blue'][i%6]}"></div>
+                  ${i < activite.length-1 ? '<div class="tl-line"></div>' : ''}
+                </div>
+                <div class="tl-body">
+                  <div class="tl-action">${a.action}</div>
+                  <div class="tl-detail">${a.detail||''}</div>
+                  ${a.user_nom ? `<div class="tl-detail" style="color:var(--amber);margin-top:2px;font-size:.72rem;">${a.user_nom}</div>` : ''}
+                </div>
+                <div class="tl-time">${timeAgo(a.created_at)}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2 : Chantiers + Devis -->
+    <div class="grid-2">
+
+      <!-- Chantiers actifs -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+            Chantiers Actifs
+          </div>
+          <button class="btn btn-sm btn-ghost" style="font-size:.66rem;padding:5px 10px;" onclick="showToast('info','Module Chantiers','Disponible dans la prochaine version.')">Voir tout →</button>
+        </div>
+        <div class="card-body" style="padding-top:4px;">
+          ${chantiers.slice(0,5).map(c => `
+            <div class="chantier-mini">
+              <div class="chantier-mini-top">
+                <div>
+                  <div class="chantier-mini-name">${c.nom}</div>
+                  <div class="chantier-mini-sub">${c.type_service} · ${c.lieu}</div>
+                </div>
+                ${badgeChantier(c.statut)}
+              </div>
+              <div class="progress-label">
+                <span>Avancement</span>
+                <span>${c.avancement}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill ${c.statut==='retard'?'red':progressColor(c.avancement)}" style="width:${c.avancement}%"></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Derniers devis -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Derniers Devis
+          </div>
+          <button class="btn btn-sm btn-ghost" style="font-size:.66rem;padding:5px 10px;" onclick="showToast('info','Module Devis','Disponible dans la prochaine version.')">Voir tout →</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Client</th>
+                <th>Montant HT</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${derniers_devis.map(d => `
+                <tr>
+                  <td><strong>${d.reference}</strong></td>
+                  <td>${d.client_nom||'—'}</td>
+                  <td>${formatFCFA(d.montant_ht)} FCFA</td>
+                  <td>${badgeDevis(d.statut)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  `;
+
+  // Date
+  const now = new Date();
+  $('dashDate') && ($('dashDate').textContent = now.toLocaleDateString('fr-FR', {weekday:'long', year:'numeric', month:'long', day:'numeric'}) + ' · Données en temps réel');
+}
+
+function alertIcon(type) {
+  const icons = {
+    danger:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>',
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  };
+  return icons[type] || icons.info;
+}
+
+async function markAlertRead(id, el) {
+  el.classList.add('lu');
+  await fetch(`/api/dashboard/alerte/${id}/lue`, { method: 'PATCH' });
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+(async () => {
+  await checkAuth();
+  await renderDashboard();
+})();
+</script>
+
+</body>
+</html>
