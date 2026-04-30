@@ -4,7 +4,7 @@ const path     = require('path');
 const os       = require('os');
 
 const app  = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -17,19 +17,29 @@ app.use(session({
   cookie: { secure: false, httpOnly: true, maxAge: 8 * 60 * 60 * 1000 }
 }));
 
+// Routes API
 app.use('/api/auth',      require('./routes/auth'));
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/devis',     require('./routes/devis'));
+app.use('/api/clients',   require('./routes/clients'));
 
+// Pages HTML
 app.get('/login', (req, res) => {
   if (req.session && req.session.user) return res.redirect('/dashboard');
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
-
 app.get('/dashboard', (req, res) => {
   if (!req.session || !req.session.user) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
-
+app.get('/devis', (req, res) => {
+  if (!req.session || !req.session.user) return res.redirect('/login');
+  res.sendFile(path.join(__dirname, 'public', 'devis.html'));
+});
+app.get('/clients', (req, res) => {
+  if (!req.session || !req.session.user) return res.redirect('/login');
+  res.sendFile(path.join(__dirname, 'public', 'clients.html'));
+});
 app.get('/', (req, res) => res.redirect('/login'));
 
 app.listen(PORT, '0.0.0.0', () => {

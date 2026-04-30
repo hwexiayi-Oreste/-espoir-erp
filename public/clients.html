@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clients — Espoir Construction ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+/* MODAL */
+.modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px; }
+.modal-overlay.open { display:flex; }
+.modal { background:var(--navy-mid);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-lg);width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.6); }
+.modal-header { display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:var(--navy-mid);z-index:1; }
+.modal-header h3 { font-family:var(--font-d);font-size:1.6rem;letter-spacing:.04em; }
+.modal-body { padding:24px; }
+.modal-footer { padding:16px 24px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:flex-end;gap:10px; }
+
+/* DETAIL PANEL */
+.detail-overlay { position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none; }
+.detail-overlay.open { display:block; }
+.detail-panel { position:fixed;top:0;right:0;bottom:0;width:540px;max-width:95vw;background:var(--navy-mid);border-left:1px solid rgba(255,255,255,.1);z-index:401;transform:translateX(100%);transition:transform .3s ease;overflow-y:auto;display:flex;flex-direction:column; }
+.detail-panel.open { transform:translateX(0); }
+.detail-panel-header { display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:var(--navy-mid);z-index:1; }
+.detail-panel-header h3 { font-family:var(--font-d);font-size:1.4rem; }
+.detail-panel-body { padding:22px;flex:1;display:flex;flex-direction:column;gap:20px; }
+.detail-panel-footer { padding:16px 22px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:8px;flex-wrap:wrap; }
+.detail-section { display:flex;flex-direction:column;gap:10px; }
+.detail-section-title { font-family:var(--font-c);font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.07); }
+.detail-row { display:flex;justify-content:space-between;align-items:flex-start;gap:12px; }
+.detail-row dt { font-size:.78rem;color:var(--grey-mid);flex-shrink:0; }
+.detail-row dd { font-size:.84rem;color:var(--white);font-weight:500;text-align:right; }
+
+/* CLIENT CARDS */
+.clients-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px; }
+.client-card { background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:var(--r-lg);padding:22px;cursor:pointer;transition:var(--transition);position:relative;overflow:hidden; }
+.client-card::before { content:'';position:absolute;top:0;left:0;width:3px;height:0;background:var(--amber);transition:height .4s ease; }
+.client-card:hover { border-color:rgba(245,166,35,.2);transform:translateY(-2px); }
+.client-card:hover::before { height:100%; }
+.client-card-top { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px; }
+.client-avatar { width:46px;height:46px;border-radius:50%;background:var(--steel-mid);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:1.2rem;color:var(--white);flex-shrink:0;border:2px solid rgba(245,166,35,.2); }
+.client-name { font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:3px; }
+.client-meta { font-size:.78rem;color:var(--grey-mid); }
+.client-footer { display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06); }
+.client-stat { text-align:center; }
+.client-stat .n { font-family:var(--font-d);font-size:1.4rem;color:var(--amber);line-height:1; }
+.client-stat .l { font-family:var(--font-c);font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-mid);margin-top:2px; }
+
+/* VIEW TOGGLE */
+.view-toggle { display:flex;gap:4px;background:var(--navy-light);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:3px; }
+.view-btn { padding:6px 12px;border-radius:4px;border:none;background:none;color:var(--grey-mid);cursor:pointer;transition:var(--transition);display:flex;align-items:center;gap:6px;font-size:.78rem; }
+.view-btn svg { width:14px;height:14px; }
+.view-btn.active { background:var(--navy-mid);color:var(--white);box-shadow:0 1px 4px rgba(0,0,0,.3); }
+</style>
+</head>
+<body>
+<div class="erp-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20L12 4L22 20"/><path d="M6 20L12 10L18 20"/></svg></div>
+      <div><div class="logo-name">ESPOIR ERP</div><div class="logo-sub">Plateforme de gestion</div></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sideAvatar">—</div>
+      <div><div class="user-name" id="sideNom">—</div><div class="user-role" id="sideRole">—</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section">Principal</p>
+      <button class="nav-item" onclick="location.href='/dashboard'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
+      </button>
+      <p class="nav-section">Commercial</p>
+      <button class="nav-item" onclick="location.href='/devis'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Devis &amp; Offres
+      </button>
+      <button class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Clients
+      </button>
+      <p class="nav-section">Opérations</p>
+      <button class="nav-item" onclick="location.href='/dashboard'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Chantiers
+      </button>
+      <button class="nav-item" style="opacity:.5;cursor:not-allowed;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>Transport
+        <span style="margin-left:auto;background:rgba(90,112,144,.15);color:var(--grey-mid);font-family:var(--font-c);font-size:.58rem;font-weight:700;padding:2px 6px;border-radius:20px;">Bientôt</span>
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="sidebar-bottom-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Clients</div>
+      <div class="topbar-bread">ERP · <span>Répertoire clients</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="user-avatar" id="topAvatar">—</div>
+        <div><div class="user-name" id="topNom">—</div><div class="user-role" id="topRole">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="erp-main">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div><h2>Gestion Clients</h2><p id="clientCount">Chargement...</p></div>
+      <div class="page-actions">
+        <div class="view-toggle">
+          <button class="view-btn active" id="btnGrid" onclick="setView('grid')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Cartes
+          </button>
+          <button class="view-btn" id="btnList" onclick="setView('list')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Liste
+          </button>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exporter
+        </button>
+        <button class="btn btn-sm btn-amber" onclick="openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nouveau Client
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div></div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-label">Total Clients</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div><div class="kpi-value" id="kpi-actifs">—</div><div class="kpi-label">Clients Actifs</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div><div class="kpi-value" id="kpi-prospects">—</div><div class="kpi-label">Prospects</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div><div class="kpi-value" id="kpi-ca">—</div><div class="kpi-label">CA Total Accepté</div></div>
+    </div>
+
+    <!-- Filtres -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <input class="filter-input" type="text" id="searchInput" placeholder="🔍 Rechercher un client..." oninput="filtrer()" style="min-width:240px;">
+      <select class="filter-select" id="filtreStatut" onchange="filtrer()">
+        <option value="">Tous les statuts</option>
+        <option value="actif">Actif</option>
+        <option value="prospect">Prospect</option>
+        <option value="inactif">Inactif</option>
+      </select>
+      <button class="btn btn-sm btn-ghost" onclick="resetFiltres()">Réinitialiser</button>
+    </div>
+
+    <!-- Contenu -->
+    <div id="mainContent">
+      <div class="loading-state"><div class="spinner"></div><p>Chargement...</p></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL NOUVEAU / MODIFIER CLIENT -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Nouveau Client</h3>
+      <button class="btn btn-sm btn-ghost" onclick="closeModal()" style="padding:6px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editClientId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom du client / Entreprise *</label>
+          <input type="text" id="fNom" placeholder="Ex: Groupe Agro Bénin">
+        </div>
+        <div class="form-group">
+          <label>Secteur d'activité</label>
+          <select id="fSecteur">
+            <option value="">-- Sélectionner --</option>
+            <option value="BTP">BTP</option>
+            <option value="Industrie">Industrie</option>
+            <option value="Énergie">Énergie</option>
+            <option value="Agro-alimentaire">Agro-alimentaire</option>
+            <option value="Logistique">Logistique</option>
+            <option value="Public">Public / Gouvernement</option>
+            <option value="Commerce">Commerce</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Ville</label>
+          <input type="text" id="fVille" placeholder="Cotonou, Parakou...">
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="fStatut">
+            <option value="prospect">Prospect</option>
+            <option value="actif">Actif</option>
+            <option value="inactif">Inactif</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input type="tel" id="fTel" placeholder="+229 01 XX XX XX XX">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="fEmail" placeholder="contact@entreprise.bj">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom du contact principal</label>
+          <input type="text" id="fContactNom" placeholder="Prénom Nom">
+        </div>
+        <div class="form-group">
+          <label>Poste du contact</label>
+          <input type="text" id="fContactPoste" placeholder="Directeur Général, DG...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes commerciales</label>
+        <textarea id="fNotes" placeholder="Historique, observations, potentiel de développement..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-sm btn-amber" onclick="sauvegarderClient()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- PANNEAU DETAIL -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-panel-header">
+    <h3 id="detailNom">—</h3>
+    <button class="btn btn-sm btn-ghost" onclick="closeDetail()" style="padding:6px 10px;">✕</button>
+  </div>
+  <div class="detail-panel-body" id="detailBody">
+    <div class="loading-state"><div class="spinner"></div></div>
+  </div>
+  <div class="detail-panel-footer" id="detailFooter"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let allClients = [];
+let currentView = 'grid';
+let currentUser = null;
+
+// ============================================================
+// HELPERS
+// ============================================================
+function formatFCFA(n) {
+  if (!n && n!==0) return '—';
+  n = parseFloat(n);
+  if (n>=1e9) return (n/1e9).toFixed(1)+' Md';
+  if (n>=1e6) return (n/1e6).toFixed(1)+'M';
+  return n.toLocaleString('fr-FR');
+}
+function initials(nom) {
+  return nom.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase() || '??';
+}
+function roleLabel(role) {
+  const m={admin:'Administrateur',directeur:'Directeur Général',comptable:'Comptable',technicien:'Technicien',client:'Client'};
+  return m[role]||role;
+}
+const STATUT_BADGE = {
+  actif:    'badge-green',
+  prospect: 'badge-orange',
+  inactif:  'badge-grey',
+};
+const STATUT_LABEL = { actif:'Actif', prospect:'Prospect', inactif:'Inactif' };
+function badgeStatut(s) {
+  return `<span class="badge ${STATUT_BADGE[s]||'badge-grey'}">${STATUT_LABEL[s]||s}</span>`;
+}
+
+// TOAST
+function showToast(type, title, msg) {
+  const icons = {
+    success:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    error:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    warning:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>',
+    info:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  };
+  const t = document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-icon">${icons[type]||icons.info}</div><div class="toast-text"><strong>${title}</strong><p>${msg}</p></div>`;
+  $('toast-container').appendChild(t);
+  setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300);},3500);
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+async function checkAuth() {
+  const res  = await fetch('/api/auth/me');
+  const data = await res.json();
+  if (!data.ok) { window.location.href='/login'; return; }
+  currentUser = data.user;
+  const av=initials(data.user.prenom+' '+data.user.nom);
+  const rl=roleLabel(data.user.role);
+  const nm=data.user.prenom+' '+data.user.nom;
+  $('sideAvatar').textContent=av; $('sideNom').textContent=nm; $('sideRole').textContent=rl;
+  $('topAvatar').textContent=av;  $('topNom').textContent=nm;  $('topRole').textContent=rl;
+}
+async function logout() {
+  await fetch('/api/auth/logout',{method:'POST'});
+  window.location.href='/login';
+}
+
+// ============================================================
+// CHARGEMENT
+// ============================================================
+async function chargerKPIs() {
+  const res  = await fetch('/api/clients/stats');
+  const data = await res.json();
+  if (!data.ok) return;
+  const s = data.stats;
+  $('kpi-total').textContent    = s.total;
+  $('kpi-actifs').textContent   = s.actifs;
+  $('kpi-prospects').textContent= s.prospects;
+  $('kpi-ca').textContent       = formatFCFA(s.ca_total)+' FCFA';
+}
+
+async function chargerClients() {
+  const statut = $('filtreStatut').value;
+  const q      = $('searchInput').value;
+  let url = '/api/clients?';
+  if (statut) url += `statut=${statut}&`;
+  if (q)      url += `q=${encodeURIComponent(q)}&`;
+
+  const res  = await fetch(url);
+  const data = await res.json();
+  if (!data.ok) return;
+  allClients = data.clients;
+  renderClients(allClients);
+}
+
+// ============================================================
+// AFFICHAGE
+// ============================================================
+function setView(v) {
+  currentView = v;
+  $('btnGrid').classList.toggle('active', v==='grid');
+  $('btnList').classList.toggle('active', v==='list');
+  renderClients(allClients);
+}
+
+function renderClients(clients) {
+  $('clientCount').textContent = `${clients.length} client${clients.length>1?'s':''} trouvé${clients.length>1?'s':''}`;
+  const main = $('mainContent');
+
+  if (clients.length === 0) {
+    main.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>Aucun client trouvé</p></div>`;
+    return;
+  }
+
+  if (currentView === 'grid') {
+    main.innerHTML = `<div class="clients-grid">${clients.map(c => `
+      <div class="client-card" onclick="ouvrirDetail(${c.id})">
+        <div class="client-card-top">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div class="client-avatar" style="background:${avatarColor(c.nom)}">${initials(c.nom)}</div>
+            <div>
+              <div class="client-name">${c.nom}</div>
+              <div class="client-meta">${c.secteur||'—'} · ${c.ville||'—'}</div>
+              ${c.contact_nom ? `<div class="client-meta" style="margin-top:2px;">Contact : ${c.contact_nom}</div>` : ''}
+            </div>
+          </div>
+          ${badgeStatut(c.statut)}
+        </div>
+        <div class="client-footer">
+          <div class="client-stat"><div class="n">${c.telephone||'—'}</div><div class="l">Téléphone</div></div>
+          <div class="client-stat"><div class="n">${c.email ? '✓' : '—'}</div><div class="l">Email</div></div>
+          <button class="btn btn-sm btn-ghost" style="font-size:.68rem;padding:5px 10px;" onclick="event.stopPropagation();ouvrirDetail(${c.id})">Fiche →</button>
+        </div>
+      </div>`).join('')}</div>`;
+  } else {
+    main.innerHTML = `<div class="card"><div class="table-wrap"><table>
+      <thead><tr><th>Client</th><th>Secteur</th><th>Ville</th><th>Contact</th><th>Téléphone</th><th>Statut</th><th>Actions</th></tr></thead>
+      <tbody>${clients.map(c => `
+        <tr style="cursor:pointer;" onclick="ouvrirDetail(${c.id})">
+          <td><strong>${c.nom}</strong></td>
+          <td>${c.secteur||'—'}</td>
+          <td>${c.ville||'—'}</td>
+          <td>${c.contact_nom||'—'}</td>
+          <td>${c.telephone||'—'}</td>
+          <td>${badgeStatut(c.statut)}</td>
+          <td onclick="event.stopPropagation()">
+            <div style="display:flex;gap:5px;">
+              <button class="btn btn-sm btn-ghost" style="padding:4px 9px;font-size:.68rem;" onclick="ouvrirDetail(${c.id})">Voir</button>
+              <button class="btn btn-sm btn-ghost" style="padding:4px 9px;font-size:.68rem;" onclick="ouvrirModal(${c.id})">Modifier</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody></table></div>
+      <div class="table-footer"><span class="table-footer-info">${clients.length} client${clients.length>1?'s':''}</span></div>
+    </div>`;
+  }
+}
+
+function avatarColor(nom) {
+  const colors = ['#1e3a5f','#2a4a72','#3a6494','#1e4a6a','#2a5a7a'];
+  let hash = 0;
+  for (let c of nom) hash = c.charCodeAt(0) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+
+// ============================================================
+// FILTRES
+// ============================================================
+function filtrer() { chargerClients(); }
+function resetFiltres() { $('searchInput').value=''; $('filtreStatut').value=''; chargerClients(); }
+
+// ============================================================
+// MODAL NOUVEAU / MODIFIER
+// ============================================================
+function openModal(client) {
+  $('editClientId').value = client ? client.id : '';
+  $('modalTitle').textContent = client ? 'Modifier le Client' : 'Nouveau Client';
+  $('fNom').value         = client?.nom || '';
+  $('fSecteur').value     = client?.secteur || '';
+  $('fVille').value       = client?.ville || '';
+  $('fStatut').value      = client?.statut || 'prospect';
+  $('fTel').value         = client?.telephone || '';
+  $('fEmail').value       = client?.email || '';
+  $('fContactNom').value  = client?.contact_nom || '';
+  $('fContactPoste').value= client?.contact_poste || '';
+  $('fNotes').value       = client?.notes || '';
+  $('modalOverlay').classList.add('open');
+}
+function closeModal() { $('modalOverlay').classList.remove('open'); }
+
+async function ouvrirModal(id) {
+  const c = allClients.find(x=>x.id===id);
+  if (c) openModal(c);
+}
+
+async function sauvegarderClient() {
+  const id  = $('editClientId').value;
+  const body = {
+    nom:          $('fNom').value.trim(),
+    secteur:      $('fSecteur').value,
+    ville:        $('fVille').value.trim(),
+    statut:       $('fStatut').value,
+    telephone:    $('fTel').value.trim(),
+    email:        $('fEmail').value.trim(),
+    contact_nom:  $('fContactNom').value.trim(),
+    contact_poste:$('fContactPoste').value.trim(),
+    notes:        $('fNotes').value.trim(),
+  };
+  if (!body.nom) { showToast('warning','Champ requis','Le nom du client est obligatoire.'); return; }
+
+  try {
+    const url    = id ? `/api/clients/${id}` : '/api/clients';
+    const method = id ? 'PUT' : 'POST';
+    const res    = await fetch(url, { method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data   = await res.json();
+    if (data.ok) {
+      showToast('success', id ? 'Client modifié' : 'Client créé', body.nom);
+      closeModal();
+      closeDetail();
+      await chargerClients();
+      await chargerKPIs();
+    } else {
+      showToast('error','Erreur', data.error||'Impossible de sauvegarder.');
+    }
+  } catch { showToast('error','Erreur','Problème de connexion.'); }
+}
+
+// ============================================================
+// DETAIL PANEL
+// ============================================================
+async function ouvrirDetail(id) {
+  $('detailNom').textContent = 'Chargement...';
+  $('detailBody').innerHTML  = '<div class="loading-state"><div class="spinner"></div></div>';
+  $('detailFooter').innerHTML= '';
+  $('detailOverlay').classList.add('open');
+  $('detailPanel').classList.add('open');
+
+  const res  = await fetch(`/api/clients/${id}`);
+  const data = await res.json();
+  if (!data.ok) { showToast('error','Erreur','Impossible de charger la fiche.'); return; }
+
+  const { client: c, devis, chantiers, ca_total } = data;
+  $('detailNom').textContent = c.nom;
+
+  const devisHTML = devis.length ? `
+    <div style="background:var(--navy-light);border-radius:var(--r);overflow:hidden;">
+      ${devis.slice(0,5).map(d=>`
+        <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div>
+            <div style="font-size:.84rem;font-weight:600;color:var(--white);">${d.reference}</div>
+            <div style="font-size:.74rem;color:var(--grey-mid);">${d.service} · ${parseFloat(d.montant_ht).toLocaleString('fr-FR')} FCFA</div>
+          </div>
+          <span class="badge ${d.statut==='accepte'?'badge-green':d.statut==='envoye'?'badge-blue':'badge-amber'}">${d.statut}</span>
+        </div>`).join('')}
+    </div>` : '<p style="color:var(--grey-mid);font-size:.84rem;">Aucun devis pour ce client.</p>';
+
+  const chantiersHTML = chantiers.length ? `
+    <div style="background:var(--navy-light);border-radius:var(--r);overflow:hidden;">
+      ${chantiers.slice(0,4).map(ch=>`
+        <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <span style="font-size:.84rem;font-weight:600;color:var(--white);">${ch.nom}</span>
+            <span class="badge ${ch.statut==='en_cours'?'badge-green':ch.statut==='retard'?'badge-red':'badge-blue'}">${ch.statut}</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill ${ch.avancement>=80?'green':'amber'}" style="width:${ch.avancement}%"></div></div>
+          <div style="font-size:.72rem;color:var(--grey-mid);margin-top:4px;">${ch.avancement}% · Livraison : ${ch.date_fin_prevue||'—'}</div>
+        </div>`).join('')}
+    </div>` : '<p style="color:var(--grey-mid);font-size:.84rem;">Aucun chantier pour ce client.</p>';
+
+  $('detailBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="client-avatar" style="width:54px;height:54px;font-size:1.4rem;background:${avatarColor(c.nom)}">${initials(c.nom)}</div>
+      <div>
+        <div style="font-size:1rem;font-weight:700;color:var(--white);">${c.nom}</div>
+        <div style="font-size:.8rem;color:var(--grey-mid);">${c.secteur||'—'} · ${c.ville||'—'}</div>
+        <div style="margin-top:5px;">${badgeStatut(c.statut)}</div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Informations</div>
+      <dl>
+        <div class="detail-row"><dt>Contact</dt><dd>${c.contact_nom||'—'} ${c.contact_poste?'· '+c.contact_poste:''}</dd></div>
+        <div class="detail-row"><dt>Téléphone</dt><dd>${c.telephone||'—'}</dd></div>
+        <div class="detail-row"><dt>Email</dt><dd>${c.email||'—'}</dd></div>
+        <div class="detail-row"><dt>Ville</dt><dd>${c.ville||'—'}</dd></div>
+        <div class="detail-row"><dt>CA Total</dt><dd><strong style="color:var(--amber);">${parseFloat(ca_total||0).toLocaleString('fr-FR')} FCFA</strong></dd></div>
+      </dl>
+    </div>
+
+    ${c.notes ? `<div class="detail-section"><div class="detail-section-title">Notes commerciales</div><p style="font-size:.83rem;color:var(--grey-light);line-height:1.7;background:var(--navy-light);padding:12px;border-radius:var(--r);border:1px solid rgba(255,255,255,.06);">${c.notes}</p></div>` : ''}
+
+    <div class="detail-section">
+      <div class="detail-section-title">Devis (${devis.length})</div>
+      ${devisHTML}
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Chantiers (${chantiers.length})</div>
+      ${chantiersHTML}
+    </div>
+  `;
+
+  $('detailFooter').innerHTML = `
+    <button class="btn btn-sm btn-amber" onclick="ouvrirModal(${c.id})">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Modifier
+    </button>
+    <button class="btn btn-sm btn-ghost" onclick="creerDevisPourClient(${c.id},'${c.nom}')">Nouveau Devis</button>
+    <button class="btn btn-sm btn-danger" onclick="supprimerClient(${c.id},'${c.nom}')">Supprimer</button>
+  `;
+
+  // Stocker le client courant pour ouvrirModal
+  window._clientCourant = c;
+}
+
+async function ouvrirModal(id) {
+  if (window._clientCourant && window._clientCourant.id === id) {
+    openModal(window._clientCourant);
+  } else {
+    const c = allClients.find(x=>x.id===id);
+    if (c) openModal(c);
+  }
+}
+
+function closeDetail() {
+  $('detailOverlay').classList.remove('open');
+  $('detailPanel').classList.remove('open');
+  window._clientCourant = null;
+}
+
+async function supprimerClient(id, nom) {
+  if (!confirm(`Supprimer le client "${nom}" ? Cette action est irréversible.`)) return;
+  const res = await fetch(`/api/clients/${id}`, { method:'DELETE' });
+  const data = await res.json();
+  if (data.ok) {
+    showToast('success','Supprimé',`${nom} a été supprimé.`);
+    closeDetail();
+    await chargerClients();
+    await chargerKPIs();
+  }
+}
+
+function creerDevisPourClient(id, nom) {
+  closeDetail();
+  window.location.href = '/devis';
+}
+
+// ============================================================
+// EXPORT CSV
+// ============================================================
+function exportCSV() {
+  if (!allClients.length) { showToast('warning','Export','Aucun client à exporter.'); return; }
+  const header = ['Nom','Secteur','Ville','Téléphone','Email','Contact','Poste','Statut'];
+  const rows = allClients.map(c => [c.nom,c.secteur||'',c.ville||'',c.telephone||'',c.email||'',c.contact_nom||'',c.contact_poste||'',c.statut]);
+  const csv = [header,...rows].map(r=>r.map(v=>`"${v}"`).join(';')).join('\n');
+  const blob = new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `clients-espoir-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('success','Export','Fichier CSV téléchargé.');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+(async()=>{
+  await checkAuth();
+  await Promise.all([chargerClients(), chargerKPIs()]);
+})();
+</script>
+</body>
+</html>
