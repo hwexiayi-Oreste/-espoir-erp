@@ -16,7 +16,7 @@ router.post('/login', async (req, res) => {
     if (!user) return res.status(401).json({ error: 'Email ou mot de passe incorrect.' });
     if (!bcrypt.compareSync(mot_de_passe, user.mot_de_passe))
       return res.status(401).json({ error: 'Email ou mot de passe incorrect.' });
-    await db.runAsync('UPDATE espoir_utilisateurs SET last_login = datetime("now") WHERE id = ?', [user.id]);
+    await db.runAsync('UPDATE espoir_utilisateurs SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
     req.session.user = { id: user.id, nom: user.nom, prenom: user.prenom, email: user.email, role: user.role };
     res.json({ ok: true, user: req.session.user });
   } catch (err) {

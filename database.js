@@ -199,7 +199,7 @@ async function initDB() {
   }
 
   const row = await db.getAsync('SELECT COUNT(*) as n FROM espoir_utilisateurs');
-  const count = parseInt(row?.n || row?.count || 0);
+  const count = parseInt(row?.n || row?.count || row?.['count(*)'] || 0);
   if (count === 0) {
     console.log('Insertion des données initiales...');
     await seedData();
