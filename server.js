@@ -26,6 +26,7 @@ app.use('/api/chantiers', require('./routes/chantiers'));
 app.use('/api/transport', require('./routes/transport'));
 app.use('/api/comptabilite', require('./routes/comptabilite'));
 app.use('/api/utilisateurs', require('./routes/utilisateurs'));
+app.use('/api/espace-client', require('./routes/espace_client'));
 
 // Pages HTML
 app.get('/login', (req, res) => {
@@ -43,6 +44,10 @@ app.get('/devis', (req, res) => {
 app.get('/clients', (req, res) => {
   if (!req.session || !req.session.user) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'public', 'clients.html'));
+});
+app.get('/espace-client', (req, res) => {
+  if (!req.session || !req.session.user) return res.redirect('/login');
+  res.sendFile(path.join(__dirname, 'public', 'espace_client.html'));
 });
 app.get('/utilisateurs', (req, res) => {
   if (!req.session || !req.session.user) return res.redirect('/login');

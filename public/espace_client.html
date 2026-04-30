@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Espace — Espoir Construction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.tabs{display:flex;gap:4px;background:var(--navy-light);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:3px;margin-bottom:20px;}
+.tab-btn{flex:1;padding:9px 16px;border-radius:4px;border:none;background:none;color:var(--grey-mid);cursor:pointer;transition:var(--transition);font-family:var(--font-c);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.tab-btn.active{background:var(--navy-mid);color:var(--white);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+
+.welcome-banner{background:linear-gradient(135deg,var(--navy-mid) 0%,#1a2a4a 100%);border:1px solid rgba(245,166,35,.15);border-radius:var(--r-lg);padding:28px 32px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;}
+.welcome-title{font-family:var(--font-d);font-size:2rem;letter-spacing:.04em;color:var(--white);margin-bottom:6px;}
+.welcome-sub{font-size:.84rem;color:var(--grey-mid);}
+.welcome-logo{font-family:var(--font-d);font-size:3rem;color:rgba(245,166,35,.15);letter-spacing:.1em;}
+
+.doc-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:var(--r-lg);padding:20px;transition:var(--transition);}
+.doc-card:hover{border-color:rgba(245,166,35,.2);}
+.doc-ref{font-family:var(--font-c);font-size:.68rem;font-weight:700;letter-spacing:.15em;color:var(--amber);margin-bottom:6px;}
+.doc-titre{font-size:.92rem;font-weight:700;color:var(--white);margin-bottom:8px;}
+.doc-meta{font-size:.76rem;color:var(--grey-mid);}
+.doc-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);}
+
+.chantier-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:var(--r-lg);padding:20px;}
+.chantier-card.retard{border-color:rgba(239,68,68,.2);}
+
+.no-client-banner{background:var(--navy-mid);border:1px solid rgba(245,166,35,.2);border-radius:var(--r-lg);padding:32px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="erp-layout">
+
+  <!-- SIDEBAR minimale pour client -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.5"><path d="M2 20L12 4L22 20"/><path d="M6 20L12 10L18 20"/></svg></div>
+      <div><div class="logo-name">ESPOIR</div><div class="logo-sub">Espace Client</div></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sideAvatar">—</div>
+      <div><div class="user-name" id="sideNom">—</div><div class="user-role" style="color:var(--amber);font-size:.7rem;font-family:var(--font-c);font-weight:700;letter-spacing:.1em;text-transform:uppercase;">Client</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section">Mon Espace</p>
+      <button class="nav-item active" id="navAccueil" onclick="switchTab('accueil')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Tableau de bord
+      </button>
+      <button class="nav-item" id="navDevis" onclick="switchTab('devis')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Mes Devis
+      </button>
+      <button class="nav-item" id="navChantiers" onclick="switchTab('chantiers')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Mes Chantiers
+      </button>
+      <button class="nav-item" id="navFactures" onclick="switchTab('factures')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Mes Factures
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="sidebar-bottom-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title" id="pageTitle">Mon Espace</div>
+      <div class="topbar-bread">Espoir Construction · <span id="pageBread">Tableau de bord</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="user-avatar" id="topAvatar">—</div>
+        <div><div class="user-name" id="topNom">—</div><div class="user-role" id="topRole">Client</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="erp-main">
+    <div id="mainContent">
+      <div class="loading-state"><div class="spinner"></div><p>Chargement...</p></div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let currentUser = null;
+let clientData  = null;
+let statsData   = null;
+let currentTab  = 'accueil';
+
+function formatFCFA(n){if(!n&&n!==0)return'—';n=parseFloat(n);if(n>=1e9)return(n/1e9).toFixed(1)+' Md FCFA';if(n>=1e6)return(n/1e6).toFixed(1)+'M FCFA';return n.toLocaleString('fr-FR')+' FCFA';}
+function formatDate(d){if(!d)return'—';const s=d.split('T')[0].split('-');return`${s[2]}/${s[1]}/${s[0]}`;}
+function initials(n){return(n||'??').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();}
+
+const STATUT_DEVIS={
+  brouillon:{label:'Brouillon',cls:'badge-grey'},
+  en_attente:{label:'En attente',cls:'badge-blue'},
+  envoye:{label:'Envoyé',cls:'badge-blue'},
+  accepte:{label:'Accepté ✓',cls:'badge-green'},
+  refuse:{label:'Refusé',cls:'badge-red'},
+  expire_bientot:{label:'Expire bientôt',cls:'badge-orange'},
+};
+const STATUT_CHANTIER={
+  planifie:{label:'Planifié',cls:'badge-blue'},
+  en_cours:{label:'En cours',cls:'badge-green'},
+  retard:{label:'En retard',cls:'badge-red'},
+  livre:{label:'Livré ✓',cls:'badge-grey'},
+};
+const STATUT_FACTURE={
+  brouillon:{label:'Brouillon',cls:'badge-grey'},
+  envoyee:{label:'Envoyée',cls:'badge-blue'},
+  payee:{label:'Payée ✓',cls:'badge-green'},
+  en_retard:{label:'En retard',cls:'badge-red'},
+  annulee:{label:'Annulée',cls:'badge-grey'},
+};
+function badge(s,map){const b=map[s]||{label:s,cls:'badge-grey'};return`<span class="badge ${b.cls}">${b.label}</span>`;}
+
+function showToast(type,title,msg){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-icon"></div><div class="toast-text"><strong>${title}</strong><p>${msg}</p></div>`;
+  $('toast-container').appendChild(t);
+  setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300);},3500);
+}
+
+async function checkAuth(){
+  const res=await fetch('/api/auth/me');
+  const data=await res.json();
+  if(!data.ok){window.location.href='/login';return;}
+  if(data.user.role!=='client'){window.location.href='/dashboard';return;}
+  currentUser=data.user;
+  const av=initials(data.user.prenom+' '+data.user.nom);
+  const nm=data.user.prenom+' '+data.user.nom;
+  $('sideAvatar').textContent=av;$('sideNom').textContent=nm;
+  $('topAvatar').textContent=av;$('topNom').textContent=nm;
+}
+async function logout(){await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login';}
+
+async function chargerProfil(){
+  const res=await fetch('/api/espace-client/profil');
+  const data=await res.json();
+  clientData=data.client;
+
+  const res2=await fetch('/api/espace-client/stats');
+  const data2=await res2.json();
+  statsData=data2.stats;
+}
+
+function switchTab(tab){
+  currentTab=tab;
+  ['accueil','devis','chantiers','factures'].forEach(t=>{
+    $('nav'+t.charAt(0).toUpperCase()+t.slice(1))?.classList.toggle('active',t===tab);
+  });
+  const titles={accueil:'Tableau de bord',devis:'Mes Devis',chantiers:'Mes Chantiers',factures:'Mes Factures'};
+  $('pageTitle').textContent=titles[tab]||'Mon Espace';
+  $('pageBread').textContent=titles[tab]||'';
+  if(tab==='accueil') renderAccueil();
+  else if(tab==='devis') chargerDevis();
+  else if(tab==='chantiers') chargerChantiers();
+  else if(tab==='factures') chargerFactures();
+}
+
+function renderAccueil(){
+  const c=clientData;
+  const s=statsData||{};
+  const nom=c?.nom||currentUser.prenom+' '+currentUser.nom;
+
+  $('mainContent').innerHTML=`
+    <!-- Bannière de bienvenue -->
+    <div class="welcome-banner">
+      <div>
+        <div class="welcome-title">Bonjour, ${currentUser.prenom} 👋</div>
+        <div class="welcome-sub">${c?`Compte client : ${c.nom}`:'Bienvenue dans votre espace personnel'} · Espoir Construction</div>
+        ${c?`<div style="margin-top:10px;font-size:.78rem;color:var(--grey-mid);">
+          ${c.telephone?'📱 '+c.telephone+' &nbsp;·&nbsp; ':''}
+          ${c.ville?'📍 '+c.ville:''}
+        </div>`:''}
+      </div>
+      <div class="welcome-logo">EC</div>
+    </div>
+
+    ${!c?`<div class="no-client-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--grey-dark);margin-bottom:12px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p style="color:var(--grey-mid);font-size:.9rem;">Votre compte client n'est pas encore lié à un dossier.<br>Contactez Espoir Construction pour activer l'accès complet.</p>
+      <p style="color:var(--grey-dark);font-size:.78rem;margin-top:8px;">📧 contact@espoir-construction.bj &nbsp;·&nbsp; 📱 +229 01 94 00 00 00</p>
+    </div>` : ''}
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card" style="cursor:pointer;" onclick="switchTab('devis')">
+        <div class="kpi-top"><div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div></div>
+        <div class="kpi-value">${s.devis||0}</div><div class="kpi-label">Mes Devis</div>
+      </div>
+      <div class="kpi-card" style="cursor:pointer;" onclick="switchTab('chantiers')">
+        <div class="kpi-top"><div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/></svg></div></div>
+        <div class="kpi-value">${s.en_cours||0}</div><div class="kpi-label">Chantiers en cours</div>
+      </div>
+      <div class="kpi-card" style="cursor:pointer;" onclick="switchTab('factures')">
+        <div class="kpi-top"><div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div>
+        <div class="kpi-value">${s.factures||0}</div><div class="kpi-label">Factures</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top"><div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/></svg></div></div>
+        <div class="kpi-value">${formatFCFA(s.ca)}</div><div class="kpi-label">Montant réglé</div>
+      </div>
+    </div>
+
+    <!-- Contact Espoir -->
+    <div class="card">
+      <div class="card-body" style="padding:20px 24px;">
+        <div style="font-family:var(--font-c);font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:14px;">Contact & Support</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;">
+          <div style="background:var(--navy-light);border-radius:var(--r);padding:14px;">
+            <div style="font-size:.72rem;color:var(--grey-mid);margin-bottom:4px;">Téléphone</div>
+            <div style="font-size:.9rem;font-weight:600;">+229 01 94 00 00 00</div>
+          </div>
+          <div style="background:var(--navy-light);border-radius:var(--r);padding:14px;">
+            <div style="font-size:.72rem;color:var(--grey-mid);margin-bottom:4px;">Email</div>
+            <div style="font-size:.9rem;font-weight:600;">contact@espoir-construction.bj</div>
+          </div>
+          <div style="background:var(--navy-light);border-radius:var(--r);padding:14px;">
+            <div style="font-size:.72rem;color:var(--grey-mid);margin-bottom:4px;">Adresse</div>
+            <div style="font-size:.9rem;font-weight:600;">Cotonou, Bénin</div>
+          </div>
+          <div style="background:var(--navy-light);border-radius:var(--r);padding:14px;">
+            <div style="font-size:.72rem;color:var(--grey-mid);margin-bottom:4px;">Horaires</div>
+            <div style="font-size:.9rem;font-weight:600;">Lun–Ven · 7h30–18h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function chargerDevis(){
+  $('mainContent').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
+  const res=await fetch('/api/espace-client/devis');
+  const data=await res.json();
+  if(!data.ok)return;
+
+  if(!data.devis.length){
+    $('mainContent').innerHTML='<div class="empty-state"><p>Aucun devis pour le moment.</p></div>';
+    return;
+  }
+
+  $('mainContent').innerHTML=`<div style="display:flex;flex-direction:column;gap:12px;">
+    ${data.devis.map(d=>`
+      <div class="doc-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div>
+            <div class="doc-ref">${d.reference}</div>
+            <div class="doc-titre">${d.service||'Prestation Espoir Construction'}</div>
+            <div class="doc-meta">Émis le ${formatDate(d.date_emission)} · Validité : ${formatDate(d.date_validite)}</div>
+          </div>
+          ${badge(d.statut, STATUT_DEVIS)}
+        </div>
+        ${d.description?`<div style="font-size:.8rem;color:var(--grey-mid);margin-bottom:10px;line-height:1.6;">${d.description}</div>`:''}
+        <div class="doc-footer">
+          <div>
+            <div style="font-size:.72rem;color:var(--grey-mid);">Montant HT</div>
+            <div style="font-size:1.1rem;font-weight:900;color:var(--amber);">${parseFloat(d.montant_ht||0).toLocaleString('fr-FR')} FCFA</div>
+            <div style="font-size:.72rem;color:var(--grey-mid);">TTC : ${parseFloat(d.montant_ttc||0).toLocaleString('fr-FR')} FCFA</div>
+          </div>
+          ${d.chef_projet?`<div style="font-size:.76rem;color:var(--grey-mid);text-align:right;">Chef de projet<br><strong style="color:var(--grey-light);">${d.chef_projet}</strong></div>`:''}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+async function chargerChantiers(){
+  $('mainContent').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
+  const res=await fetch('/api/espace-client/chantiers');
+  const data=await res.json();
+  if(!data.ok)return;
+
+  if(!data.chantiers.length){
+    $('mainContent').innerHTML='<div class="empty-state"><p>Aucun chantier pour le moment.</p></div>';
+    return;
+  }
+
+  $('mainContent').innerHTML=`<div style="display:flex;flex-direction:column;gap:12px;">
+    ${data.chantiers.map(c=>`
+      <div class="chantier-card ${c.statut==='retard'?'retard':''}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:8px;flex-wrap:wrap;">
+          <div>
+            <div style="font-family:var(--font-c);font-size:.68rem;font-weight:700;letter-spacing:.15em;color:var(--amber);">${c.reference}</div>
+            <div style="font-size:.95rem;font-weight:700;color:var(--white);margin-top:3px;">${c.nom}</div>
+            <div style="font-size:.78rem;color:var(--grey-mid);margin-top:3px;">${c.type_service||'—'} · ${c.lieu||'—'}</div>
+          </div>
+          ${badge(c.statut, STATUT_CHANTIER)}
+        </div>
+
+        <!-- Avancement -->
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:.76rem;color:var(--grey-mid);">Avancement global</span>
+            <span style="font-family:var(--font-d);font-size:1.2rem;color:var(--amber);">${c.avancement}%</span>
+          </div>
+          <div class="progress-bar" style="height:10px;">
+            <div class="progress-fill ${c.statut==='retard'?'red':c.avancement>=80?'green':'amber'}" style="width:${c.avancement}%"></div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div style="font-size:.76rem;color:var(--grey-mid);">Chef de chantier<br><strong style="color:var(--grey-light);">${c.chef_chantier||'—'}</strong></div>
+          <div style="font-size:.76rem;color:var(--grey-mid);text-align:right;">Début<br><strong style="color:var(--grey-light);">${formatDate(c.date_debut)}</strong></div>
+          <div style="font-size:.76rem;color:var(--grey-mid);text-align:right;">Livraison prévue<br><strong style="color:${c.statut==='retard'?'var(--red)':'var(--grey-light)'};">${formatDate(c.date_fin_prevue)}</strong></div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+async function chargerFactures(){
+  $('mainContent').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
+  const res=await fetch('/api/espace-client/factures');
+  const data=await res.json();
+  if(!data.ok)return;
+
+  if(!data.factures.length){
+    $('mainContent').innerHTML='<div class="empty-state"><p>Aucune facture pour le moment.</p></div>';
+    return;
+  }
+
+  $('mainContent').innerHTML=`<div style="display:flex;flex-direction:column;gap:12px;">
+    ${data.factures.map(f=>`
+      <div class="doc-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;">
+          <div>
+            <div class="doc-ref">${f.reference}</div>
+            <div class="doc-meta">Émise le ${formatDate(f.date_emission)} · Échéance : <span style="color:${f.statut==='en_retard'?'var(--red)':'inherit'};">${formatDate(f.date_echeance)}</span></div>
+          </div>
+          ${badge(f.statut, STATUT_FACTURE)}
+        </div>
+        <div class="doc-footer">
+          <div>
+            <div style="font-size:.72rem;color:var(--grey-mid);">Montant HT</div>
+            <div style="font-size:1rem;font-weight:700;">${parseFloat(f.montant_ht||0).toLocaleString('fr-FR')} FCFA</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:.72rem;color:var(--grey-mid);">TVA (${f.tva}%)</div>
+            <div style="font-size:1rem;font-weight:700;">${parseFloat(f.montant_tva||0).toLocaleString('fr-FR')} FCFA</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:.72rem;color:var(--grey-mid);">Total TTC</div>
+            <div style="font-size:1.2rem;font-weight:900;color:${f.statut==='payee'?'var(--green)':f.statut==='en_retard'?'var(--red)':'var(--amber)'};">${parseFloat(f.montant_ttc||0).toLocaleString('fr-FR')} FCFA</div>
+          </div>
+        </div>
+        ${f.notes?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);font-size:.78rem;color:var(--grey-mid);">${f.notes}</div>`:''}
+      </div>`).join('')}
+  </div>`;
+}
+
+// Rediriger vers dashboard si admin/directeur
+async function init(){
+  await checkAuth();
+  await chargerProfil();
+  renderAccueil();
+}
+init();
+</script>
+</body>
+</html>

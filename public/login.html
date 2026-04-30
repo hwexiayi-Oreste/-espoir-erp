@@ -269,7 +269,7 @@ async function doLogin() {
     const data = await res.json();
 
     if (data.ok) {
-      window.location.href = '/dashboard';
+      window.location.href = data.redirect || '/dashboard';
     } else {
       showError(data.error || 'Identifiants incorrects.');
       resetBtn();

@@ -18,7 +18,8 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Email ou mot de passe incorrect.' });
     await db.runAsync('UPDATE espoir_utilisateurs SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
     req.session.user = { id: user.id, nom: user.nom, prenom: user.prenom, email: user.email, role: user.role };
-    res.json({ ok: true, user: req.session.user });
+    const redirect = req.session.user.role === 'client' ? '/espace-client' : '/dashboard';
+    res.json({ ok: true, user: req.session.user, redirect });
   } catch (err) {
     res.status(500).json({ error: 'Erreur serveur.' });
   }
@@ -29,7 +30,8 @@ router.post('/logout', (req, res) => {
 });
 
 router.get('/me', (req, res) => {
-  if (req.session && req.session.user) return res.json({ ok: true, user: req.session.user });
+  if (req.session && req.session.user) return const redirect = req.session.user.role === 'client' ? '/espace-client' : '/dashboard';
+    res.json({ ok: true, user: req.session.user, redirect });
   res.status(401).json({ ok: false });
 });
 
