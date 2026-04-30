@@ -108,6 +108,23 @@ async function initDB() {
         depense REAL DEFAULT 0, statut TEXT DEFAULT 'planifie',
         notes TEXT, created_at TIMESTAMP DEFAULT NOW()
       )`,
+      `CREATE TABLE IF NOT EXISTS espoir_vehicules (
+        id SERIAL PRIMARY KEY,
+        immatriculation TEXT NOT NULL UNIQUE,
+        marque TEXT, modele TEXT, type_vehicule TEXT,
+        capacite TEXT, chauffeur TEXT,
+        date_maintenance DATE, statut TEXT DEFAULT 'disponible',
+        notes TEXT, created_at TIMESTAMP DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS espoir_missions (
+        id SERIAL PRIMARY KEY,
+        vehicule_id INTEGER REFERENCES espoir_vehicules(id),
+        chantier_id INTEGER REFERENCES espoir_chantiers(id),
+        type_mission TEXT, depart TEXT, destination TEXT,
+        date_debut DATE, date_fin_prevue DATE, date_fin_reelle DATE,
+        statut TEXT DEFAULT 'planifie', notes TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
       `CREATE TABLE IF NOT EXISTS espoir_alertes (
         id SERIAL PRIMARY KEY, type TEXT, titre TEXT, message TEXT,
         lien_type TEXT, lien_id INTEGER,
@@ -167,6 +184,21 @@ async function initDB() {
         chef_chantier TEXT, date_debut TEXT, date_fin_prevue TEXT,
         date_fin_reelle TEXT, avancement INTEGER DEFAULT 0,
         budget REAL DEFAULT 0, depense REAL DEFAULT 0,
+        statut TEXT DEFAULT 'planifie', notes TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS espoir_vehicules (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        immatriculation TEXT UNIQUE, marque TEXT, modele TEXT,
+        type_vehicule TEXT, capacite TEXT, chauffeur TEXT,
+        date_maintenance TEXT, statut TEXT DEFAULT 'disponible',
+        notes TEXT, created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS espoir_missions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        vehicule_id INTEGER, chantier_id INTEGER,
+        type_mission TEXT, depart TEXT, destination TEXT,
+        date_debut TEXT, date_fin_prevue TEXT, date_fin_reelle TEXT,
         statut TEXT DEFAULT 'planifie', notes TEXT,
         created_at TEXT DEFAULT (datetime('now'))
       );
@@ -286,6 +318,34 @@ async function seedData() {
       'INSERT INTO espoir_alertes (type,titre,message,lien_type,lien_id,lu) VALUES (?,?,?,?,?,?)',
       a
     );
+  }
+
+
+  const vehicules = [
+    ['TG-4821-BJ','Mercedes','Actros 2645','Camion gros porteur','30 tonnes','Koffi Adéchi','2025-08-15','disponible','Parfait état.'],
+    ['TG-3310-BJ','Scania','R500','Camion semi-remorque','40 tonnes','Barnabé Hounkpè','2025-07-01','disponible','Révisé mars 2025.'],
+    ['TG-7754-BJ','Manitowoc','MLC165','Grue mobile','165 tonnes','Ing. Akpovo','2025-06-20','en_mission','Affecté Port-Nord.'],
+    ['TG-2209-BJ','Caterpillar','980M','Chargeuse sur pneus','15 m³','Théodore Boco','2025-05-10','maintenance','Révision moteur.'],
+    ['TG-9901-BJ','Liebherr','LTM1100','Grue automotrice','100 tonnes','Martial Kpèdé','2025-09-30','disponible','Neuf - livré 2024.'],
+    ['TG-6643-BJ','Volvo','FH16','Camion benne','25 tonnes','Cyprien Zounon','2025-07-15','disponible',''],
+  ];
+  for (const v of vehicules) {
+    await db.runAsync(
+      'INSERT INTO espoir_vehicules (immatriculation,marque,modele,type_vehicule,capacite,chauffeur,date_maintenance,statut,notes) VALUES (?,?,?,?,?,?,?,?,?)',
+      v
+    ).catch(()=>{});
+  }
+
+  const missions = [
+    [3,1,'Transport matériaux','Zone Portuaire Cotonou','Chantier Port-Nord','2025-05-10','2025-05-11','en_cours','Charpente métallique 45T'],
+    [1,5,'Transport équipements','Cotonou Siège','Route Lokossa','2025-05-08','2025-05-09','termine','Matériaux TP'],
+    [2,null,'Transport','Cotonou','Parakou','2025-05-15','2025-05-16','planifie','Commande client'],
+  ];
+  for (const m of missions) {
+    await db.runAsync(
+      'INSERT INTO espoir_missions (vehicule_id,chantier_id,type_mission,depart,destination,date_debut,date_fin_prevue,statut,notes) VALUES (?,?,?,?,?,?,?,?,?)',
+      m
+    ).catch(()=>{});
   }
 
   const acts = [

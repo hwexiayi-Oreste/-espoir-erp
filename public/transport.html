@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transport & Manutention — Espoir Construction ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--navy-mid);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-lg);width:100%;max-width:680px;max-height:90vh;overflow-y:auto;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:var(--navy-mid);}
+.modal-header h3{font-family:var(--font-d);font-size:1.6rem;}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:flex-end;gap:10px;}
+
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;}
+.detail-overlay.open{display:block;}
+.detail-panel{position:fixed;top:0;right:0;bottom:0;width:520px;max-width:95vw;background:var(--navy-mid);border-left:1px solid rgba(255,255,255,.1);z-index:401;transform:translateX(100%);transition:transform .3s ease;overflow-y:auto;display:flex;flex-direction:column;}
+.detail-panel.open{transform:translateX(0);}
+.detail-panel-header{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:var(--navy-mid);}
+.detail-panel-header h3{font-family:var(--font-d);font-size:1.3rem;}
+.detail-panel-body{padding:22px;flex:1;display:flex;flex-direction:column;gap:18px;}
+.detail-panel-footer{padding:16px 22px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:8px;flex-wrap:wrap;}
+.detail-section-title{font-family:var(--font-c);font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:10px;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;background:var(--navy-light);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:3px;margin-bottom:20px;}
+.tab-btn{flex:1;padding:8px 16px;border-radius:4px;border:none;background:none;color:var(--grey-mid);cursor:pointer;transition:var(--transition);font-family:var(--font-c);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.tab-btn.active{background:var(--navy-mid);color:var(--white);box-shadow:0 1px 4px rgba(0,0,0,.3);}
+
+/* VEHICULE CARD */
+.vehicules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+.vehicule-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:var(--r-lg);padding:20px;cursor:pointer;transition:var(--transition);position:relative;overflow:hidden;}
+.vehicule-card:hover{border-color:rgba(245,166,35,.2);transform:translateY(-2px);}
+.vehicule-icon{width:48px;height:48px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.vehicule-icon svg{width:22px;height:22px;}
+.vehicule-immat{font-family:var(--font-d);font-size:1.3rem;color:var(--white);letter-spacing:.06em;margin-bottom:4px;}
+.vehicule-type{font-size:.78rem;color:var(--grey-mid);margin-bottom:12px;}
+.vehicule-footer{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);}
+
+/* MISSION ROW */
+.mission-row{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:var(--r);padding:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.mission-info{flex:1;min-width:200px;}
+.mission-title{font-size:.88rem;font-weight:700;color:var(--white);margin-bottom:4px;}
+.mission-sub{font-size:.76rem;color:var(--grey-mid);}
+.mission-route{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--grey-light);margin-top:6px;}
+.mission-route svg{width:12px;height:12px;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="erp-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.5"><path d="M2 20L12 4L22 20"/><path d="M6 20L12 10L18 20"/></svg></div>
+      <div><div class="logo-name">ESPOIR ERP</div><div class="logo-sub">Plateforme de gestion</div></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sideAvatar">—</div>
+      <div><div class="user-name" id="sideNom">—</div><div class="user-role" id="sideRole">—</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section">Principal</p>
+      <button class="nav-item" onclick="location.href='/dashboard'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
+      </button>
+      <p class="nav-section">Commercial</p>
+      <button class="nav-item" onclick="location.href='/devis'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Devis &amp; Offres
+      </button>
+      <button class="nav-item" onclick="location.href='/clients'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Clients
+      </button>
+      <p class="nav-section">Opérations</p>
+      <button class="nav-item" onclick="location.href='/chantiers'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Chantiers
+      </button>
+      <button class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Transport &amp; Manutention
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="sidebar-bottom-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Transport & Manutention</div>
+      <div class="topbar-bread">ERP · <span>Flotte & Missions</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="user-avatar" id="topAvatar">—</div>
+        <div><div class="user-name" id="topNom">—</div><div class="user-role" id="topRole">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="erp-main">
+
+    <div class="page-header">
+      <div><h2>Transport & Manutention</h2><p id="pageCount">Chargement...</p></div>
+      <div class="page-actions">
+        <button class="btn btn-sm btn-ghost" id="btnNouvelleAction" onclick="ouvrirModalMission()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle Mission
+        </button>
+        <button class="btn btn-sm btn-amber" onclick="ouvrirModalVehicule()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter Véhicule
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div></div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-label">Total Flotte</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div><div class="kpi-value" id="kpi-dispo">—</div><div class="kpi-label">Disponibles</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="kpi-value" id="kpi-mission">—</div><div class="kpi-label">En Mission</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div></div><div class="kpi-value" id="kpi-maint">—</div><div class="kpi-label">Maintenance</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-flotte" onclick="switchTab('flotte')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;display:inline;margin-right:5px;"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>
+        Flotte Véhicules
+      </button>
+      <button class="tab-btn" id="tab-missions" onclick="switchTab('missions')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;display:inline;margin-right:5px;"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Missions
+      </button>
+    </div>
+
+    <!-- Filtres flotte -->
+    <div id="filtresFlotte" style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <input class="filter-input" type="text" id="searchInput" placeholder="🔍 Immatriculation, marque..." oninput="chargerVehicules()" style="min-width:220px;">
+      <select class="filter-select" id="filtreStatutV" onchange="chargerVehicules()">
+        <option value="">Tous les statuts</option>
+        <option value="disponible">Disponible</option>
+        <option value="en_mission">En mission</option>
+        <option value="maintenance">Maintenance</option>
+      </select>
+    </div>
+
+    <!-- Contenu principal -->
+    <div id="mainContent">
+      <div class="loading-state"><div class="spinner"></div><p>Chargement...</p></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL VEHICULE -->
+<div class="modal-overlay" id="modalVehicule">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalVehiculeTitle">Ajouter un Véhicule</h3>
+      <button class="btn btn-sm btn-ghost" onclick="fermerModal('modalVehicule')" style="padding:6px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editVehiculeId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Immatriculation *</label>
+          <input type="text" id="vImmat" placeholder="TG-0000-BJ">
+        </div>
+        <div class="form-group">
+          <label>Type de véhicule *</label>
+          <select id="vType">
+            <option value="">-- Sélectionner --</option>
+            <option value="Camion gros porteur">Camion gros porteur</option>
+            <option value="Camion semi-remorque">Camion semi-remorque</option>
+            <option value="Camion benne">Camion benne</option>
+            <option value="Grue mobile">Grue mobile</option>
+            <option value="Grue automotrice">Grue automotrice</option>
+            <option value="Chargeuse sur pneus">Chargeuse sur pneus</option>
+            <option value="Chariot élévateur">Chariot élévateur</option>
+            <option value="Véhicule léger">Véhicule léger</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Marque</label>
+          <input type="text" id="vMarque" placeholder="Mercedes, Scania, Manitowoc...">
+        </div>
+        <div class="form-group">
+          <label>Modèle</label>
+          <input type="text" id="vModele" placeholder="Actros 2645, R500...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Capacité / Tonnage</label>
+          <input type="text" id="vCapacite" placeholder="30 tonnes, 165 tonnes...">
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="vStatut">
+            <option value="disponible">Disponible</option>
+            <option value="en_mission">En mission</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="hors_service">Hors service</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Chauffeur / Opérateur</label>
+          <input type="text" id="vChauffeur" placeholder="Nom du chauffeur">
+        </div>
+        <div class="form-group">
+          <label>Prochaine maintenance</label>
+          <input type="date" id="vMaintenance">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="vNotes" placeholder="État général, observations..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-ghost" onclick="fermerModal('modalVehicule')">Annuler</button>
+      <button class="btn btn-sm btn-amber" onclick="sauvegarderVehicule()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MISSION -->
+<div class="modal-overlay" id="modalMission">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nouvelle Mission</h3>
+      <button class="btn btn-sm btn-ghost" onclick="fermerModal('modalMission')" style="padding:6px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Véhicule *</label>
+          <select id="mVehicule"><option value="">-- Sélectionner --</option></select>
+        </div>
+        <div class="form-group">
+          <label>Type de mission *</label>
+          <select id="mType">
+            <option value="">-- Sélectionner --</option>
+            <option value="Transport matériaux">Transport matériaux</option>
+            <option value="Transport équipements">Transport équipements</option>
+            <option value="Levage">Levage</option>
+            <option value="Manutention">Manutention</option>
+            <option value="Livraison client">Livraison client</option>
+            <option value="Autre">Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Chantier associé</label>
+        <select id="mChantier"><option value="">-- Aucun --</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Lieu de départ</label>
+          <input type="text" id="mDepart" placeholder="Cotonou, Zone Industrielle...">
+        </div>
+        <div class="form-group">
+          <label>Destination</label>
+          <input type="text" id="mDest" placeholder="Chantier Port-Nord, Bohicon...">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date de départ</label>
+          <input type="date" id="mDebut">
+        </div>
+        <div class="form-group">
+          <label>Date de retour prévue</label>
+          <input type="date" id="mFin">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes / Instructions</label>
+        <textarea id="mNotes" placeholder="Instructions spéciales, contacts sur place..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-ghost" onclick="fermerModal('modalMission')">Annuler</button>
+      <button class="btn btn-sm btn-amber" onclick="sauvegarderMission()">Créer la Mission</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL VEHICULE -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-panel-header">
+    <h3 id="detailTitle">—</h3>
+    <button class="btn btn-sm btn-ghost" onclick="closeDetail()" style="padding:6px 10px;">✕</button>
+  </div>
+  <div class="detail-panel-body" id="detailBody"></div>
+  <div class="detail-panel-footer" id="detailFooter"></div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let allVehicules = [];
+let allChantiers = [];
+let currentTab   = 'flotte';
+let currentUser  = null;
+
+function formatDate(d) { if(!d)return'—'; const[y,m,j]=d.split('T')[0].split('-'); return`${j}/${m}/${y}`; }
+function initials(n) { return(n||'??').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase(); }
+function roleLabel(r) { return{admin:'Administrateur',directeur:'Directeur Général',comptable:'Comptable',technicien:'Technicien',client:'Client'}[r]||r; }
+
+const STATUT_V = {
+  disponible:   { label:'Disponible',   cls:'badge-green'  },
+  en_mission:   { label:'En Mission',   cls:'badge-amber'  },
+  maintenance:  { label:'Maintenance',  cls:'badge-red'    },
+  hors_service: { label:'Hors Service', cls:'badge-grey'   },
+};
+const STATUT_M = {
+  planifie: { label:'Planifié',  cls:'badge-blue'  },
+  en_cours: { label:'En cours',  cls:'badge-amber' },
+  termine:  { label:'Terminé',   cls:'badge-green' },
+  annule:   { label:'Annulé',    cls:'badge-grey'  },
+};
+function badgeV(s) { const b=STATUT_V[s]||{label:s,cls:'badge-grey'}; return`<span class="badge ${b.cls}">${b.label}</span>`; }
+function badgeM(s) { const b=STATUT_M[s]||{label:s,cls:'badge-grey'}; return`<span class="badge ${b.cls}">${b.label}</span>`; }
+
+const TYPE_ICONS = {
+  'Camion gros porteur':   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>',
+  'Grue mobile':           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22V12L12 2l8 10v10"/><line x1="12" y1="2" x2="12" y2="22"/><line x1="4" y1="12" x2="20" y2="12"/></svg>',
+  'Grue automotrice':      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22V12L12 2l8 10v10"/><line x1="12" y1="2" x2="12" y2="22"/></svg>',
+  'Chargeuse sur pneus':   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>',
+};
+function getIcon(type) { return TYPE_ICONS[type]||TYPE_ICONS['Camion gros porteur']; }
+function getIconBg(statut) { return statut==='disponible'?'rgba(34,197,94,.15)':statut==='en_mission'?'rgba(245,166,35,.15)':'rgba(239,68,68,.15)'; }
+function getIconColor(statut) { return statut==='disponible'?'var(--green)':statut==='en_mission'?'var(--amber)':'var(--red)'; }
+
+function showToast(type,title,msg) {
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></div><div class="toast-text"><strong>${title}</strong><p>${msg}</p></div>`;
+  $('toast-container').appendChild(t);
+  setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300);},3500);
+}
+
+async function checkAuth() {
+  const res=await fetch('/api/auth/me');
+  const data=await res.json();
+  if(!data.ok){window.location.href='/login';return;}
+  currentUser=data.user;
+  const av=initials(data.user.prenom+' '+data.user.nom);
+  const rl=roleLabel(data.user.role);
+  const nm=data.user.prenom+' '+data.user.nom;
+  $('sideAvatar').textContent=av;$('sideNom').textContent=nm;$('sideRole').textContent=rl;
+  $('topAvatar').textContent=av;$('topNom').textContent=nm;$('topRole').textContent=rl;
+}
+async function logout(){await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login';}
+
+async function chargerKPIs() {
+  const res=await fetch('/api/transport/stats');
+  const data=await res.json();
+  if(!data.ok)return;
+  $('kpi-total').textContent=data.stats.total_vehicules;
+  $('kpi-dispo').textContent=data.stats.disponibles;
+  $('kpi-mission').textContent=data.stats.en_mission;
+  $('kpi-maint').textContent=data.stats.maintenance;
+}
+
+async function chargerVehicules() {
+  const q=$('searchInput').value;
+  const statut=$('filtreStatutV').value;
+  let url='/api/transport/vehicules?';
+  if(q) url+=`q=${encodeURIComponent(q)}&`;
+  if(statut) url+=`statut=${statut}&`;
+  const res=await fetch(url);
+  const data=await res.json();
+  if(!data.ok)return;
+  allVehicules=data.vehicules;
+  $('pageCount').textContent=`${data.vehicules.length} véhicule${data.vehicules.length>1?'s':''}`;
+
+  if(!data.vehicules.length){
+    $('mainContent').innerHTML='<div class="empty-state"><p>Aucun véhicule trouvé</p></div>';
+    return;
+  }
+
+  // Peupler select vehicule dans modal mission
+  const sel=$('mVehicule');
+  sel.innerHTML='<option value="">-- Sélectionner --</option>';
+  allVehicules.filter(v=>v.statut==='disponible').forEach(v=>{
+    const o=document.createElement('option');
+    o.value=v.id; o.textContent=`${v.immatriculation} — ${v.type_vehicule} (${v.capacite||'—'})`;
+    sel.appendChild(o);
+  });
+
+  $('mainContent').innerHTML=`<div class="vehicules-grid">${data.vehicules.map(v=>`
+    <div class="vehicule-card" onclick="ouvrirDetail(${v.id})">
+      <div class="vehicule-icon" style="background:${getIconBg(v.statut)};color:${getIconColor(v.statut)};">
+        ${getIcon(v.type_vehicule)}
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+        <div class="vehicule-immat">${v.immatriculation}</div>
+        ${badgeV(v.statut)}
+      </div>
+      <div class="vehicule-type">${v.type_vehicule||'—'} · ${v.marque||''} ${v.modele||''}</div>
+      <div class="vehicule-footer">
+        <div style="font-size:.76rem;color:var(--grey-mid);">
+          <strong style="color:var(--grey-light);display:block;">${v.chauffeur||'—'}</strong>Chauffeur
+        </div>
+        <div style="font-size:.76rem;color:var(--grey-mid);text-align:right;">
+          <strong style="color:var(--grey-light);display:block;">${v.capacite||'—'}</strong>Capacité
+        </div>
+      </div>
+      ${v.date_maintenance ? `<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);font-size:.72rem;color:${new Date(v.date_maintenance)<new Date()?'var(--red)':'var(--grey-mid)'};">
+        🔧 Maintenance : ${formatDate(v.date_maintenance)}
+      </div>` : ''}
+    </div>`).join('')}</div>`;
+}
+
+async function chargerMissions() {
+  const res=await fetch('/api/transport/missions');
+  const data=await res.json();
+  if(!data.ok)return;
+  $('pageCount').textContent=`${data.missions.length} mission${data.missions.length>1?'s':''}`;
+
+  if(!data.missions.length){
+    $('mainContent').innerHTML='<div class="empty-state"><p>Aucune mission trouvée</p></div>';
+    return;
+  }
+
+  $('mainContent').innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;">
+    ${data.missions.map(m=>`
+      <div class="mission-row">
+        <div class="mission-info">
+          <div class="mission-title">${m.type_mission}</div>
+          <div class="mission-sub">${m.immatriculation||'—'} · ${m.type_vehicule||'—'} · Chauffeur : ${m.chauffeur||'—'}</div>
+          <div class="mission-route">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/></svg>
+            ${m.depart||'—'} → ${m.destination||'—'}
+          </div>
+          ${m.chantier_nom?`<div style="font-size:.72rem;color:var(--amber);margin-top:4px;">📦 Chantier : ${m.chantier_nom}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+          ${badgeM(m.statut)}
+          <div style="font-size:.72rem;color:var(--grey-mid);">${formatDate(m.date_debut)}</div>
+          ${m.statut==='planifie'?`<button class="btn btn-sm btn-ghost" style="font-size:.68rem;padding:4px 9px;" onclick="changerStatutMission(${m.id},'en_cours')">Démarrer</button>`:''}
+          ${m.statut==='en_cours'?`<button class="btn btn-sm btn-ghost" style="font-size:.68rem;padding:4px 9px;" onclick="changerStatutMission(${m.id},'termine')">Terminer</button>`:''}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function switchTab(tab) {
+  currentTab=tab;
+  $('tab-flotte').classList.toggle('active',tab==='flotte');
+  $('tab-missions').classList.toggle('active',tab==='missions');
+  $('filtresFlotte').style.display=tab==='flotte'?'flex':'none';
+  $('btnNouvelleAction').textContent=tab==='missions'?'Nouvelle Mission':'Nouvelle Mission';
+  $('btnNouvelleAction').onclick=tab==='missions'?ouvrirModalMission:ouvrirModalMission;
+  if(tab==='flotte') chargerVehicules();
+  else chargerMissions();
+}
+
+// MODALS
+function ouvrirModalVehicule(v) {
+  $('editVehiculeId').value=v?v.id:'';
+  $('modalVehiculeTitle').textContent=v?'Modifier le Véhicule':'Ajouter un Véhicule';
+  $('vImmat').value=v?.immatriculation||'';
+  $('vType').value=v?.type_vehicule||'';
+  $('vMarque').value=v?.marque||'';
+  $('vModele').value=v?.modele||'';
+  $('vCapacite').value=v?.capacite||'';
+  $('vStatut').value=v?.statut||'disponible';
+  $('vChauffeur').value=v?.chauffeur||'';
+  $('vMaintenance').value=v?.date_maintenance?.split('T')[0]||'';
+  $('vNotes').value=v?.notes||'';
+  $('modalVehicule').classList.add('open');
+}
+function ouvrirModalMission() { $('modalMission').classList.add('open'); }
+function fermerModal(id) { $(id).classList.remove('open'); }
+
+async function sauvegarderVehicule() {
+  const id=$('editVehiculeId').value;
+  const body={
+    immatriculation:$('vImmat').value.trim(),
+    type_vehicule:$('vType').value,
+    marque:$('vMarque').value.trim(),
+    modele:$('vModele').value.trim(),
+    capacite:$('vCapacite').value.trim(),
+    statut:$('vStatut').value,
+    chauffeur:$('vChauffeur').value.trim(),
+    date_maintenance:$('vMaintenance').value||null,
+    notes:$('vNotes').value.trim(),
+  };
+  if(!body.immatriculation){showToast('warning','Requis','L\'immatriculation est obligatoire.');return;}
+  const url=id?`/api/transport/vehicules/${id}`:'/api/transport/vehicules';
+  const method=id?'PUT':'POST';
+  const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await res.json();
+  if(data.ok){
+    showToast('success',id?'Modifié':'Ajouté',body.immatriculation);
+    fermerModal('modalVehicule');
+    await chargerVehicules(); await chargerKPIs();
+  } else { showToast('error','Erreur',data.error||'Impossible de sauvegarder.'); }
+}
+
+async function sauvegarderMission() {
+  const body={
+    vehicule_id:$('mVehicule').value,
+    chantier_id:$('mChantier').value||null,
+    type_mission:$('mType').value,
+    depart:$('mDepart').value.trim(),
+    destination:$('mDest').value.trim(),
+    date_debut:$('mDebut').value||null,
+    date_fin_prevue:$('mFin').value||null,
+    notes:$('mNotes').value.trim(),
+  };
+  if(!body.vehicule_id||!body.type_mission){showToast('warning','Requis','Véhicule et type de mission sont obligatoires.');return;}
+  const res=await fetch('/api/transport/missions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await res.json();
+  if(data.ok){
+    showToast('success','Mission créée','La mission a été planifiée.');
+    fermerModal('modalMission');
+    if(currentTab==='missions') await chargerMissions();
+    await chargerKPIs(); await chargerVehicules();
+  } else { showToast('error','Erreur',data.error||'Impossible de créer la mission.'); }
+}
+
+async function changerStatutMission(id,statut) {
+  const res=await fetch(`/api/transport/missions/${id}/statut`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({statut})});
+  const data=await res.json();
+  if(data.ok){ await chargerMissions(); await chargerKPIs(); }
+}
+
+// DETAIL VEHICULE
+async function ouvrirDetail(id) {
+  $('detailOverlay').classList.add('open');
+  $('detailPanel').classList.add('open');
+  $('detailTitle').textContent='Chargement...';
+  $('detailBody').innerHTML='<div class="loading-state"><div class="spinner"></div></div>';
+
+  const res=await fetch(`/api/transport/vehicules/${id}`);
+  const data=await res.json();
+  if(!data.ok)return;
+  const v=data.vehicule;
+  const missions=data.missions||[];
+
+  $('detailTitle').textContent=v.immatriculation;
+  $('detailBody').innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="vehicule-icon" style="background:${getIconBg(v.statut)};color:${getIconColor(v.statut)};width:54px;height:54px;">
+        ${getIcon(v.type_vehicule)}
+      </div>
+      <div>
+        <div style="font-size:1rem;font-weight:700;">${v.type_vehicule||'—'}</div>
+        <div style="font-size:.8rem;color:var(--grey-mid);">${v.marque||''} ${v.modele||''}</div>
+        <div style="margin-top:5px;">${badgeV(v.statut)}</div>
+      </div>
+    </div>
+    <div>
+      <div class="detail-section-title">Informations</div>
+      <dl>
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><dt style="font-size:.78rem;color:var(--grey-mid);">Chauffeur</dt><dd style="font-size:.84rem;font-weight:600;">${v.chauffeur||'—'}</dd></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><dt style="font-size:.78rem;color:var(--grey-mid);">Capacité</dt><dd style="font-size:.84rem;font-weight:600;">${v.capacite||'—'}</dd></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px;"><dt style="font-size:.78rem;color:var(--grey-mid);">Maintenance</dt><dd style="font-size:.84rem;font-weight:600;color:${v.date_maintenance&&new Date(v.date_maintenance)<new Date()?'var(--red)':'var(--white)'};">${formatDate(v.date_maintenance)}</dd></div>
+      </dl>
+    </div>
+    ${v.notes?`<div><div class="detail-section-title">Notes</div><p style="font-size:.83rem;color:var(--grey-light);line-height:1.7;background:var(--navy-light);padding:12px;border-radius:var(--r);">${v.notes}</p></div>`:''}
+    <div>
+      <div class="detail-section-title">Dernières missions (${missions.length})</div>
+      ${missions.length?`<div style="display:flex;flex-direction:column;gap:8px;">${missions.slice(0,5).map(m=>`
+        <div style="background:var(--navy-light);border-radius:var(--r);padding:10px 12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-size:.84rem;font-weight:600;">${m.type_mission}</span>
+            ${badgeM(m.statut)}
+          </div>
+          <div style="font-size:.74rem;color:var(--grey-mid);">${m.depart||'—'} → ${m.destination||'—'} · ${formatDate(m.date_debut)}</div>
+        </div>`).join('')}</div>`
+      :'<p style="font-size:.84rem;color:var(--grey-mid);">Aucune mission pour ce véhicule.</p>'}
+    </div>
+  `;
+
+  $('detailFooter').innerHTML=`
+    <button class="btn btn-sm btn-amber" onclick="ouvrirModalVehicule(${JSON.stringify(v).replace(/"/g,'&quot;')})">Modifier</button>
+    <button class="btn btn-sm btn-danger" onclick="supprimerVehicule(${v.id},'${v.immatriculation}')">Supprimer</button>
+  `;
+  window._vehiculeCourant=v;
+}
+
+function closeDetail() {
+  $('detailOverlay').classList.remove('open');
+  $('detailPanel').classList.remove('open');
+}
+
+async function supprimerVehicule(id,immat) {
+  if(!confirm(`Supprimer le véhicule ${immat} ?`))return;
+  const res=await fetch(`/api/transport/vehicules/${id}`,{method:'DELETE'});
+  const data=await res.json();
+  if(data.ok){showToast('success','Supprimé',immat+' supprimé.');closeDetail();await chargerVehicules();await chargerKPIs();}
+}
+
+// Peupler chantiers dans modal mission
+async function chargerChantiers() {
+  const res=await fetch('/api/chantiers');
+  const data=await res.json();
+  if(!data.ok)return;
+  const sel=$('mChantier');
+  sel.innerHTML='<option value="">-- Aucun --</option>';
+  data.chantiers.forEach(c=>{
+    const o=document.createElement('option');
+    o.value=c.id; o.textContent=`${c.reference} — ${c.nom}`;
+    sel.appendChild(o);
+  });
+}
+
+(async()=>{
+  await checkAuth();
+  await Promise.all([chargerKPIs(), chargerVehicules(), chargerChantiers()]);
+})();
+</script>
+</body>
+</html>

@@ -23,6 +23,7 @@ app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/devis',     require('./routes/devis'));
 app.use('/api/clients',   require('./routes/clients'));
 app.use('/api/chantiers', require('./routes/chantiers'));
+app.use('/api/transport', require('./routes/transport'));
 
 // Pages HTML
 app.get('/login', (req, res) => {
@@ -40,6 +41,10 @@ app.get('/devis', (req, res) => {
 app.get('/clients', (req, res) => {
   if (!req.session || !req.session.user) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'public', 'clients.html'));
+});
+app.get('/transport', (req, res) => {
+  if (!req.session || !req.session.user) return res.redirect('/login');
+  res.sendFile(path.join(__dirname, 'public', 'transport.html'));
 });
 app.get('/chantiers', (req, res) => {
   if (!req.session || !req.session.user) return res.redirect('/login');
