@@ -8,13 +8,13 @@ router.get('/stats', requireAuth, async (req, res) => {
   await ready;
   try {
     const stats = {
-      total:    (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers")).n,
-      en_cours: (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='en_cours'")).n,
-      retard:   (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='retard'")).n,
-      planifie: (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='planifie'")).n,
-      livre:    (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='livre'")).n,
-      budget_total:  (await db.getAsync("SELECT COALESCE(SUM(budget),0) as t FROM espoir_chantiers WHERE statut IN ('en_cours','retard')")).t,
-      depense_total: (await db.getAsync("SELECT COALESCE(SUM(depense),0) as t FROM espoir_chantiers WHERE statut IN ('en_cours','retard')")).t,
+      total:    parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers"))?.n || 0),
+      en_cours: parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='en_cours'"))?.n || 0),
+      retard:   parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='retard'"))?.n || 0),
+      planifie: parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='planifie'"))?.n || 0),
+      livre:    parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='livre'"))?.n || 0),
+      budget_total:  parseFloat((await db.getAsync("SELECT COALESCE(SUM(budget),0) as t FROM espoir_chantiers WHERE statut IN ('en_cours','retard')"))?.t || 0),
+      depense_total: parseFloat((await db.getAsync("SELECT COALESCE(SUM(depense),0) as t FROM espoir_chantiers WHERE statut IN ('en_cours','retard')"))?.t || 0),
     };
     res.json({ ok: true, stats });
   } catch (err) { res.status(500).json({ error: err.message }); }

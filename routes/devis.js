@@ -128,13 +128,13 @@ router.get('/stats/resume', requireAuth, async (req, res) => {
   await ready;
   try {
     const stats = {
-      total:          (await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis")).n,
-      en_attente:     (await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut IN ('en_attente','envoye','expire_bientot')")).n,
-      acceptes:       (await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut = 'accepte'")).n,
-      pipeline:       (await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as t FROM espoir_devis WHERE statut IN ('en_attente','envoye','expire_bientot')")).t,
-      ca_accepte:     (await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as t FROM espoir_devis WHERE statut = 'accepte'")).t,
-      taux_conversion:(await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut IN ('accepte','refuse')")).n,
-      nb_acceptes_calc:(await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut = 'accepte'")).n,
+      total:          parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis"))?.n || 0),
+      en_attente:     parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut IN ('en_attente','envoye','expire_bientot')"))?.n || 0),
+      acceptes:       parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut = 'accepte'"))?.n || 0),
+      pipeline:       parseFloat((await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as t FROM espoir_devis WHERE statut IN ('en_attente','envoye','expire_bientot')"))?.t || 0),
+      ca_accepte:     parseFloat((await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as t FROM espoir_devis WHERE statut = 'accepte'"))?.t || 0),
+      taux_conversion:parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut IN ('accepte','refuse')"))?.n || 0),
+      nb_acceptes_calc:parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut = 'accepte'"))?.n || 0),
     };
     if (stats.taux_conversion > 0)
       stats.taux = Math.round((stats.nb_acceptes_calc / stats.taux_conversion) * 100);

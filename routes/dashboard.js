@@ -6,15 +6,16 @@ const router = express.Router();
 router.get('/', requireAuth, async (req, res) => {
   await ready;
   try {
+    const g = async (sql) => { const r = await db.getAsync(sql); return r?.n || r?.count || r?.total || 0; };
     const kpis = {
-      chantiers_actifs:     (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut IN ('en_cours','retard')")).n,
-      chantiers_retard:     (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut = 'retard'")).n,
-      devis_en_attente:     (await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut IN ('en_attente','envoye','expire_bientot')")).n,
-      devis_expire_bientot: (await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut = 'expire_bientot'")).n,
-      clients_actifs:       (await db.getAsync("SELECT COUNT(*) as n FROM espoir_clients WHERE statut = 'actif'")).n,
-      prospects:            (await db.getAsync("SELECT COUNT(*) as n FROM espoir_clients WHERE statut = 'prospect'")).n,
-      pipeline_fcfa:        (await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as total FROM espoir_devis WHERE statut IN ('en_attente','envoye','expire_bientot')")).total,
-      ca_acceptes:          (await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as total FROM espoir_devis WHERE statut = 'accepte'")).total,
+      chantiers_actifs:     parseInt(await g("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut IN ('en_cours','retard')")),
+      chantiers_retard:     parseInt(await g("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut = 'retard'")),
+      devis_en_attente:     parseInt(await g("SELECT COUNT(*) as n FROM espoir_devis WHERE statut IN ('en_attente','envoye','expire_bientot')")),
+      devis_expire_bientot: parseInt(await g("SELECT COUNT(*) as n FROM espoir_devis WHERE statut = 'expire_bientot'")),
+      clients_actifs:       parseInt(await g("SELECT COUNT(*) as n FROM espoir_clients WHERE statut = 'actif'")),
+      prospects:            parseInt(await g("SELECT COUNT(*) as n FROM espoir_clients WHERE statut = 'prospect'")),
+      pipeline_fcfa:        parseFloat((await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as total FROM espoir_devis WHERE statut IN ('en_attente','envoye','expire_bientot')"))?.total || 0),
+      ca_acceptes:          parseFloat((await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as total FROM espoir_devis WHERE statut = 'accepte'"))?.total || 0),
     };
 
     const derniers_devis = await db.allAsync(`

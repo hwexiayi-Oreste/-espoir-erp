@@ -198,8 +198,12 @@ async function initDB() {
     `);
   }
 
-  const row = await db.getAsync('SELECT COUNT(*) as n FROM espoir_utilisateurs');
-  const count = parseInt(row?.n || row?.count || row?.['count(*)'] || 0);
+  let count = 0;
+  try {
+    const row = await db.getAsync('SELECT COUNT(*) as n FROM espoir_utilisateurs');
+    count = parseInt(row?.n || row?.count || 0);
+  } catch(e) { count = 0; }
+  console.log('Nombre utilisateurs en base:', count);
   if (count === 0) {
     console.log('Insertion des données initiales...');
     await seedData();

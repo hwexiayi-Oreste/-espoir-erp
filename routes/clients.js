@@ -23,11 +23,11 @@ router.get('/stats', requireAuth, async (req, res) => {
   await ready;
   try {
     const stats = {
-      total:    (await db.getAsync("SELECT COUNT(*) as n FROM espoir_clients")).n,
-      actifs:   (await db.getAsync("SELECT COUNT(*) as n FROM espoir_clients WHERE statut='actif'")).n,
-      prospects:(await db.getAsync("SELECT COUNT(*) as n FROM espoir_clients WHERE statut='prospect'")).n,
-      inactifs: (await db.getAsync("SELECT COUNT(*) as n FROM espoir_clients WHERE statut='inactif'")).n,
-      ca_total: (await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as t FROM espoir_devis WHERE statut='accepte'")).t,
+      total:    parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_clients"))?.n || 0),
+      actifs:   parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_clients WHERE statut='actif'"))?.n || 0),
+      prospects:parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_clients WHERE statut='prospect'"))?.n || 0),
+      inactifs: parseInt((await db.getAsync("SELECT COUNT(*) as n FROM espoir_clients WHERE statut='inactif'"))?.n || 0),
+      ca_total: parseFloat((await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as t FROM espoir_devis WHERE statut='accepte'"))?.t || 0),
     };
     res.json({ ok: true, stats });
   } catch (err) { res.status(500).json({ error: err.message }); }
