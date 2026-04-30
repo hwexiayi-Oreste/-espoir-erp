@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Utilisateurs — Espoir Construction ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--navy-mid);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-lg);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:var(--navy-mid);}
+.modal-header h3{font-family:var(--font-d);font-size:1.6rem;}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:flex-end;gap:10px;}
+
+.user-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:var(--r-lg);padding:20px;display:flex;align-items:center;gap:16px;transition:var(--transition);}
+.user-card:hover{border-color:rgba(245,166,35,.15);}
+.user-card.inactif{opacity:.5;}
+.user-big-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:1.3rem;color:var(--white);flex-shrink:0;border:2px solid rgba(245,166,35,.2);}
+.user-info{flex:1;}
+.user-fullname{font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:3px;}
+.user-email{font-size:.78rem;color:var(--grey-mid);}
+.user-meta{font-size:.74rem;color:var(--grey-dark);margin-top:4px;}
+.user-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+
+.role-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-family:var(--font-c);font-size:.62rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.role-admin{background:rgba(245,166,35,.15);color:var(--amber);}
+.role-directeur{background:rgba(59,130,246,.15);color:#60a5fa;}
+.role-comptable{background:rgba(34,197,94,.15);color:#4ade80;}
+.role-technicien{background:rgba(168,85,247,.15);color:#c084fc;}
+.role-client{background:rgba(156,163,175,.15);color:#9ca3af;}
+</style>
+</head>
+<body>
+<div class="erp-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.5"><path d="M2 20L12 4L22 20"/><path d="M6 20L12 10L18 20"/></svg></div>
+      <div><div class="logo-name">ESPOIR ERP</div><div class="logo-sub">Plateforme de gestion</div></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sideAvatar">—</div>
+      <div><div class="user-name" id="sideNom">—</div><div class="user-role" id="sideRole">—</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section">Principal</p>
+      <button class="nav-item" onclick="location.href='/dashboard'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
+      </button>
+      <p class="nav-section">Commercial</p>
+      <button class="nav-item" onclick="location.href='/devis'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>Devis &amp; Offres
+      </button>
+      <button class="nav-item" onclick="location.href='/clients'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Clients
+      </button>
+      <p class="nav-section">Opérations</p>
+      <button class="nav-item" onclick="location.href='/chantiers'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Chantiers
+      </button>
+      <button class="nav-item" onclick="location.href='/transport'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Transport
+      </button>
+      <p class="nav-section">Finance</p>
+      <button class="nav-item" onclick="location.href='/comptabilite'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Comptabilité
+      </button>
+      <p class="nav-section">Administration</p>
+      <button class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Utilisateurs
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="sidebar-bottom-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Utilisateurs</div>
+      <div class="topbar-bread">ERP · <span>Gestion des accès</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="user-avatar" id="topAvatar">—</div>
+        <div><div class="user-name" id="topNom">—</div><div class="user-role" id="topRole">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="erp-main">
+
+    <div class="page-header">
+      <div><h2>Gestion des Utilisateurs</h2><p id="pageCount">Chargement...</p></div>
+      <div class="page-actions">
+        <button class="btn btn-sm btn-amber" onclick="ouvrirModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvel Utilisateur
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));">
+      <div class="kpi-card"><div class="kpi-value" id="kpi-total">—</div><div class="kpi-label">Total Comptes</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi-actifs" style="color:var(--green);">—</div><div class="kpi-label">Actifs</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi-admins" style="color:var(--amber);">—</div><div class="kpi-label">Administrateurs</div></div>
+      <div class="kpi-card"><div class="kpi-value" id="kpi-techniciens" style="color:#c084fc;">—</div><div class="kpi-label">Techniciens</div></div>
+    </div>
+
+    <!-- Rôles info -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-body" style="padding:16px 20px;">
+        <div style="font-family:var(--font-c);font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;">Niveaux d'accès</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <span class="role-badge role-admin">Admin — Accès total</span>
+          <span class="role-badge role-directeur">Directeur — Lecture + Validation</span>
+          <span class="role-badge role-comptable">Comptable — Finance uniquement</span>
+          <span class="role-badge role-technicien">Technicien — Chantiers + Transport</span>
+          <span class="role-badge role-client">Client — Espace client uniquement</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste -->
+    <div id="mainContent">
+      <div class="loading-state"><div class="spinner"></div><p>Chargement...</p></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL CRÉER / MODIFIER -->
+<div class="modal-overlay" id="modalUser">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Nouvel Utilisateur</h3>
+      <button class="btn btn-sm btn-ghost" onclick="fermerModal()" style="padding:6px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Prénom *</label>
+          <input type="text" id="uPrenom" placeholder="Jean-Pierre">
+        </div>
+        <div class="form-group">
+          <label>Nom *</label>
+          <input type="text" id="uNom" placeholder="AKPOVI">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Adresse email *</label>
+        <input type="email" id="uEmail" placeholder="jeanpierre.akpovi@espoir.bj">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Rôle *</label>
+          <select id="uRole">
+            <option value="technicien">Technicien</option>
+            <option value="comptable">Comptable</option>
+            <option value="directeur">Directeur</option>
+            <option value="admin">Administrateur</option>
+            <option value="client">Client</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Téléphone</label>
+          <input type="tel" id="uTel" placeholder="+229 01 XX XX XX XX">
+        </div>
+      </div>
+      <div class="form-group" id="passwordGroup">
+        <label>Mot de passe *</label>
+        <input type="password" id="uPassword" placeholder="Minimum 6 caractères">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-ghost" onclick="fermerModal()">Annuler</button>
+      <button class="btn btn-sm btn-amber" onclick="sauvegarder()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MOT DE PASSE -->
+<div class="modal-overlay" id="modalPassword">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>Nouveau Mot de Passe</h3>
+      <button class="btn btn-sm btn-ghost" onclick="fermerModalPassword()" style="padding:6px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pwUserId">
+      <p style="font-size:.84rem;color:var(--grey-mid);margin-bottom:16px;">Utilisateur : <strong id="pwUserNom" style="color:var(--white);">—</strong></p>
+      <div class="form-group">
+        <label>Nouveau mot de passe *</label>
+        <input type="password" id="pwNew" placeholder="Minimum 6 caractères">
+      </div>
+      <div class="form-group">
+        <label>Confirmer le mot de passe *</label>
+        <input type="password" id="pwConfirm" placeholder="Répéter le mot de passe">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-ghost" onclick="fermerModalPassword()">Annuler</button>
+      <button class="btn btn-sm btn-amber" onclick="changerMotDePasse()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let allUsers = [];
+let currentUser = null;
+
+function initials(n){return(n||'??').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();}
+function roleLabel(r){return{admin:'Administrateur',directeur:'Directeur Général',comptable:'Comptable',technicien:'Technicien',client:'Client'}[r]||r;}
+function formatDate(d){if(!d)return'Jamais';const s=(d.split('T')[0]).split('-');return`${s[2]}/${s[1]}/${s[0]}`;}
+
+const ROLE_COLORS = {
+  admin:'#1a2a3a', directeur:'#1a2035', comptable:'#0f2a1a',
+  technicien:'#1f1035', client:'#1a1a1a'
+};
+
+function roleBadge(r) {
+  const cls={admin:'role-admin',directeur:'role-directeur',comptable:'role-comptable',technicien:'role-technicien',client:'role-client'}[r]||'role-client';
+  return`<span class="role-badge ${cls}">${roleLabel(r)}</span>`;
+}
+
+function showToast(type,title,msg){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-icon"></div><div class="toast-text"><strong>${title}</strong><p>${msg}</p></div>`;
+  $('toast-container').appendChild(t);
+  setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300);},3500);
+}
+
+async function checkAuth(){
+  const res=await fetch('/api/auth/me');
+  const data=await res.json();
+  if(!data.ok){window.location.href='/login';return;}
+  if(data.user.role!=='admin'){window.location.href='/dashboard';return;}
+  currentUser=data.user;
+  const av=initials(data.user.prenom+' '+data.user.nom);
+  const rl=roleLabel(data.user.role);
+  const nm=data.user.prenom+' '+data.user.nom;
+  $('sideAvatar').textContent=av;$('sideNom').textContent=nm;$('sideRole').textContent=rl;
+  $('topAvatar').textContent=av;$('topNom').textContent=nm;$('topRole').textContent=rl;
+}
+async function logout(){await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login';}
+
+async function chargerUtilisateurs(){
+  const res=await fetch('/api/utilisateurs');
+  const data=await res.json();
+  if(!data.ok)return;
+  allUsers=data.users;
+
+  // KPIs
+  $('kpi-total').textContent=allUsers.length;
+  $('kpi-actifs').textContent=allUsers.filter(u=>u.actif).length;
+  $('kpi-admins').textContent=allUsers.filter(u=>u.role==='admin').length;
+  $('kpi-techniciens').textContent=allUsers.filter(u=>u.role==='technicien').length;
+  $('pageCount').textContent=`${allUsers.length} compte${allUsers.length>1?'s':''}`;
+
+  if(!allUsers.length){
+    $('mainContent').innerHTML='<div class="empty-state"><p>Aucun utilisateur trouvé</p></div>';
+    return;
+  }
+
+  $('mainContent').innerHTML=`<div style="display:flex;flex-direction:column;gap:10px;">
+    ${allUsers.map(u=>`
+      <div class="user-card ${u.actif?'':'inactif'}">
+        <div class="user-big-avatar" style="background:${ROLE_COLORS[u.role]||'#1a1a2e'};">${initials(u.prenom+' '+u.nom)}</div>
+        <div class="user-info">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <div class="user-fullname">${u.prenom} ${u.nom}</div>
+            ${roleBadge(u.role)}
+            ${!u.actif?'<span class="badge badge-grey">Inactif</span>':''}
+          </div>
+          <div class="user-email">${u.email}</div>
+          <div class="user-meta">
+            ${u.telephone?'📱 '+u.telephone+' · ':''}
+            Créé le ${formatDate(u.created_at)} · 
+            Dernière connexion : ${formatDate(u.last_login)}
+          </div>
+        </div>
+        <div class="user-actions">
+          <button class="btn btn-sm btn-ghost" style="font-size:.68rem;padding:5px 10px;" onclick="ouvrirModal(${u.id})">Modifier</button>
+          <button class="btn btn-sm btn-ghost" style="font-size:.68rem;padding:5px 10px;" onclick="ouvrirModalPassword(${u.id},'${u.prenom} ${u.nom}')">Mot de passe</button>
+          ${u.id!==currentUser.id?`<button class="btn btn-sm ${u.actif?'btn-danger':'btn-ghost'}" style="font-size:.68rem;padding:5px 10px;" onclick="toggleActif(${u.id},${u.actif?0:1},'${u.prenom} ${u.nom}')">${u.actif?'Désactiver':'Activer'}</button>`:''}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+// MODAL CRÉER / MODIFIER
+function ouvrirModal(id) {
+  const u = id ? allUsers.find(x=>x.id===id) : null;
+  $('editId').value = u ? u.id : '';
+  $('modalTitle').textContent = u ? 'Modifier l\'Utilisateur' : 'Nouvel Utilisateur';
+  $('uPrenom').value  = u?.prenom || '';
+  $('uNom').value     = u?.nom || '';
+  $('uEmail').value   = u?.email || '';
+  $('uRole').value    = u?.role || 'technicien';
+  $('uTel').value     = u?.telephone || '';
+  $('uPassword').value = '';
+  $('passwordGroup').style.display = u ? 'none' : 'block';
+  $('modalUser').classList.add('open');
+}
+function fermerModal(){$('modalUser').classList.remove('open');}
+
+async function sauvegarder(){
+  const id=$('editId').value;
+  const body={
+    prenom:$('uPrenom').value.trim(),
+    nom:$('uNom').value.trim(),
+    email:$('uEmail').value.trim(),
+    role:$('uRole').value,
+    telephone:$('uTel').value.trim(),
+  };
+  if(!id) body.mot_de_passe=$('uPassword').value;
+
+  if(!body.prenom||!body.nom||!body.email){showToast('warning','Requis','Prénom, nom et email sont obligatoires.');return;}
+  if(!id&&!body.mot_de_passe){showToast('warning','Requis','Le mot de passe est obligatoire.');return;}
+
+  const url=id?`/api/utilisateurs/${id}`:'/api/utilisateurs';
+  const method=id?'PUT':'POST';
+  const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await res.json();
+  if(data.ok){
+    showToast('success',id?'Utilisateur modifié':'Utilisateur créé',`${body.prenom} ${body.nom}`);
+    fermerModal();await chargerUtilisateurs();
+  } else { showToast('error','Erreur',data.error||'Impossible de sauvegarder.'); }
+}
+
+async function toggleActif(id,actif,nom){
+  const action=actif?'activer':'désactiver';
+  if(!confirm(`${actif?'Activer':'Désactiver'} le compte de ${nom} ?`))return;
+  const res=await fetch(`/api/utilisateurs/${id}/actif`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({actif})});
+  const data=await res.json();
+  if(data.ok){showToast('success',actif?'Compte activé':'Compte désactivé',nom);await chargerUtilisateurs();}
+  else{showToast('error','Erreur',data.error||'Impossible.');}
+}
+
+// MODAL MOT DE PASSE
+function ouvrirModalPassword(id,nom){
+  $('pwUserId').value=id;
+  $('pwUserNom').textContent=nom;
+  $('pwNew').value='';$('pwConfirm').value='';
+  $('modalPassword').classList.add('open');
+}
+function fermerModalPassword(){$('modalPassword').classList.remove('open');}
+
+async function changerMotDePasse(){
+  const id=$('pwUserId').value;
+  const pwd=$('pwNew').value;
+  const conf=$('pwConfirm').value;
+  if(!pwd||pwd.length<6){showToast('warning','Trop court','Minimum 6 caractères.');return;}
+  if(pwd!==conf){showToast('warning','Erreur','Les mots de passe ne correspondent pas.');return;}
+  const res=await fetch(`/api/utilisateurs/${id}/password`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({nouveau_mot_de_passe:pwd})});
+  const data=await res.json();
+  if(data.ok){showToast('success','Mot de passe modifié','Le nouveau mot de passe est actif.');fermerModalPassword();}
+  else{showToast('error','Erreur',data.error||'Impossible.');}
+}
+
+(async()=>{
+  await checkAuth();
+  await chargerUtilisateurs();
+})();
+</script>
+</body>
+</html>
