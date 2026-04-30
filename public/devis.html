@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devis & Offres — Espoir Construction ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+/* ---- MODAL ---- */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--navy-mid);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--r-lg);
+  width: 100%;
+  max-width: 820px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,.6);
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  position: sticky;
+  top: 0;
+  background: var(--navy-mid);
+  z-index: 1;
+}
+.modal-header h3 { font-family: var(--font-d); font-size: 1.6rem; letter-spacing: .04em; }
+.modal-body { padding: 24px; }
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ---- LIGNES DEVIS ---- */
+.lignes-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.lignes-table th {
+  font-family: var(--font-c); font-size: .62rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--grey-mid);
+  text-align: left; padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.lignes-table td { padding: 6px 4px; vertical-align: middle; }
+.lignes-table input, .lignes-table select {
+  background: var(--navy);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--r);
+  padding: 7px 10px;
+  font-size: .83rem;
+  color: var(--white);
+  outline: none;
+  width: 100%;
+  transition: var(--transition);
+}
+.lignes-table input:focus { border-color: var(--amber); }
+.lignes-table .td-total {
+  font-family: var(--font-c); font-weight: 700;
+  color: var(--white); font-size: .88rem;
+  padding: 0 10px; white-space: nowrap;
+}
+.btn-del-ligne {
+  background: var(--red-bg); border: none; border-radius: var(--r);
+  color: var(--red); padding: 6px 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.btn-del-ligne:hover { background: rgba(239,68,68,.25); }
+.btn-del-ligne svg { width: 14px; height: 14px; }
+
+/* ---- TOTAUX ---- */
+.totaux-box {
+  background: var(--navy-light);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: var(--r);
+  padding: 16px 20px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.total-row {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+}
+.total-row .lbl {
+  font-family: var(--font-c); font-size: .7rem; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--grey-mid);
+}
+.total-row .val { font-size: .92rem; color: var(--white); font-weight: 600; min-width: 140px; text-align: right; }
+.total-row.ttc .lbl { color: var(--amber); }
+.total-row.ttc .val { font-family: var(--font-d); font-size: 1.4rem; color: var(--amber); }
+
+/* ---- DETAIL PANEL ---- */
+.detail-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 400;
+  display: none;
+}
+.detail-overlay.open { display: block; }
+.detail-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: 520px;
+  max-width: 95vw;
+  background: var(--navy-mid);
+  border-left: 1px solid rgba(255,255,255,.1);
+  z-index: 401;
+  transform: translateX(100%);
+  transition: transform .3s ease;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.detail-panel.open { transform: translateX(0); }
+.detail-panel-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 22px; border-bottom: 1px solid rgba(255,255,255,.08);
+  position: sticky; top: 0; background: var(--navy-mid); z-index: 1;
+}
+.detail-panel-header h3 { font-family: var(--font-d); font-size: 1.4rem; }
+.detail-panel-body { padding: 22px; flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.detail-panel-footer {
+  padding: 16px 22px; border-top: 1px solid rgba(255,255,255,.08);
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.detail-section { display: flex; flex-direction: column; gap: 10px; }
+.detail-section-title {
+  font-family: var(--font-c); font-size: .65rem; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--amber);
+  padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.detail-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.detail-row dt { font-size: .78rem; color: var(--grey-mid); flex-shrink: 0; }
+.detail-row dd { font-size: .84rem; color: var(--white); font-weight: 500; text-align: right; }
+
+/* ---- PDF styles (impression) ---- */
+@media print {
+  body * { visibility: hidden; }
+  #pdf-content, #pdf-content * { visibility: visible; }
+  #pdf-content {
+    position: fixed; inset: 0;
+    background: white; color: black;
+    padding: 30px 40px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="erp-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20L12 4L22 20"/><path d="M6 20L12 10L18 20"/></svg>
+      </div>
+      <div><div class="logo-name">ESPOIR ERP</div><div class="logo-sub">Plateforme de gestion</div></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sideAvatar">—</div>
+      <div><div class="user-name" id="sideNom">—</div><div class="user-role" id="sideRole">—</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section">Principal</p>
+      <button class="nav-item" onclick="location.href='/dashboard'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <p class="nav-section">Commercial</p>
+      <button class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Devis &amp; Offres
+      </button>
+      <button class="nav-item" onclick="location.href='/dashboard'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        Clients
+      </button>
+      <p class="nav-section">Opérations</p>
+      <button class="nav-item" onclick="location.href='/dashboard'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        Chantiers
+      </button>
+      <button class="nav-item" style="opacity:.5;cursor:not-allowed;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>
+        Transport
+        <span class="nav-badge" style="background:rgba(90,112,144,.15);color:var(--grey-mid);font-family:var(--font-c);font-size:.58rem;font-weight:700;padding:2px 6px;border-radius:20px;margin-left:auto;">Bientôt</span>
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="sidebar-bottom-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Devis &amp; Offres</div>
+      <div class="topbar-bread">ERP · <span>Gestion commerciale</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="user-avatar" id="topAvatar">—</div>
+        <div><div class="user-name" id="topNom">—</div><div class="user-role" id="topRole">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="erp-main">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div>
+        <h2>Devis &amp; Offres</h2>
+        <p id="devisCount">Chargement...</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-sm btn-ghost" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exporter
+        </button>
+        <button class="btn btn-sm btn-amber" onclick="openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouveau Devis
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div><div class="kpi-value" id="kpi-pipeline">—</div><div class="kpi-label">Pipeline FCFA</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div></div><div class="kpi-value" id="kpi-attente">—</div><div class="kpi-label">En Attente</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div></div><div class="kpi-value" id="kpi-acceptes">—</div><div class="kpi-label">Acceptés</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div></div><div class="kpi-value" id="kpi-taux">—</div><div class="kpi-label">Taux Conversion</div></div>
+    </div>
+
+    <!-- Filtres -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <input class="filter-input" type="text" id="searchInput" placeholder="🔍 Rechercher référence ou client..." oninput="filtrer()" style="min-width:240px;">
+      <select class="filter-select" id="filtreStatut" onchange="filtrer()">
+        <option value="">Tous les statuts</option>
+        <option value="brouillon">Brouillon</option>
+        <option value="en_attente">En attente</option>
+        <option value="envoye">Envoyé</option>
+        <option value="expire_bientot">Expire bientôt</option>
+        <option value="accepte">Accepté</option>
+        <option value="refuse">Refusé</option>
+        <option value="expire">Expiré</option>
+      </select>
+      <select class="filter-select" id="filtreService" onchange="filtrer()">
+        <option value="">Tous les services</option>
+        <option value="Genie Civil">Génie Civil</option>
+        <option value="Construction Metallique">Construction Métallique</option>
+        <option value="Transport">Transport</option>
+        <option value="Manutention">Manutention</option>
+      </select>
+      <button class="btn btn-sm btn-ghost" onclick="resetFiltres()">Réinitialiser</button>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="table-wrap">
+        <table id="devisTable">
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Client</th>
+              <th>Service</th>
+              <th>Montant HT (FCFA)</th>
+              <th>Date émission</th>
+              <th>Validité</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="devisTbody">
+            <tr><td colspan="8" style="text-align:center;padding:40px;"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span class="table-footer-info" id="tableInfo">—</span>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /erp-layout -->
+
+<!-- =====================
+     MODAL NOUVEAU DEVIS
+     ===================== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Nouveau Devis</h3>
+      <button class="btn btn-sm btn-ghost" onclick="closeModal()" style="padding:6px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editDevisId">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client *</label>
+          <select id="formClientId">
+            <option value="">-- Sélectionner un client --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Service *</label>
+          <select id="formService">
+            <option value="">-- Sélectionner --</option>
+            <option value="Genie Civil">Génie Civil</option>
+            <option value="Construction Metallique">Construction Métallique</option>
+            <option value="Transport">Transport</option>
+            <option value="Manutention">Manutention</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Chef de projet</label>
+          <input type="text" id="formChefProjet" placeholder="Ing. Nom Prénom">
+        </div>
+        <div class="form-group">
+          <label>Date de validité</label>
+          <input type="date" id="formDateValidite">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description des travaux</label>
+        <textarea id="formDescription" placeholder="Décrire les travaux, localisation, superficie, délais..."></textarea>
+      </div>
+
+      <!-- Lignes de prestation -->
+      <div style="margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <label style="font-family:var(--font-c);font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--grey-mid);">Lignes de prestation</label>
+          <button class="btn btn-sm btn-ghost" onclick="ajouterLigne()" style="font-size:.68rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Ajouter une ligne
+          </button>
+        </div>
+        <table class="lignes-table">
+          <thead>
+            <tr>
+              <th style="width:35%;">Désignation</th>
+              <th style="width:10%;">Unité</th>
+              <th style="width:12%;">Quantité</th>
+              <th style="width:18%;">Prix unitaire</th>
+              <th style="width:18%;">Total</th>
+              <th style="width:7%;"></th>
+            </tr>
+          </thead>
+          <tbody id="lignesTbody"></tbody>
+        </table>
+        <div class="totaux-box">
+          <div class="total-row"><span class="lbl">Sous-total HT</span><span class="val" id="totalHT">0 FCFA</span></div>
+          <div class="total-row"><span class="lbl">TVA (18%)</span><span class="val" id="totalTVA">0 FCFA</span></div>
+          <div class="total-row ttc"><span class="lbl">TOTAL TTC</span><span class="val" id="totalTTC">0 FCFA</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-sm btn-amber" onclick="sauvegarderDevis()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer le Devis
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- =====================
+     PANNEAU DETAIL
+     ===================== -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-panel-header">
+    <h3 id="detailRef">—</h3>
+    <button class="btn btn-sm btn-ghost" onclick="closeDetail()" style="padding:6px 10px;">✕</button>
+  </div>
+  <div class="detail-panel-body" id="detailBody">
+    <div class="loading-state"><div class="spinner"></div></div>
+  </div>
+  <div class="detail-panel-footer" id="detailFooter"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<script>
+// ============================================================
+//  HELPERS
+// ============================================================
+const $ = id => document.getElementById(id);
+let allDevis = [];
+let clients  = [];
+
+function formatFCFA(n) {
+  if (!n && n !== 0) return '—';
+  return parseFloat(n).toLocaleString('fr-FR') + ' FCFA';
+}
+function formatFCFAshort(n) {
+  if (!n && n !== 0) return '—';
+  n = parseFloat(n);
+  if (n >= 1e9) return (n/1e9).toFixed(1) + ' Md';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  return n.toLocaleString('fr-FR');
+}
+function formatDate(d) {
+  if (!d) return '—';
+  const [y,m,j] = d.split('-');
+  return `${j}/${m}/${y}`;
+}
+
+const STATUTS = {
+  brouillon:      { label:'Brouillon',      cls:'badge-grey'  },
+  en_attente:     { label:'En attente',     cls:'badge-amber' },
+  envoye:         { label:'Envoyé',         cls:'badge-blue'  },
+  expire_bientot: { label:'Expire bientôt', cls:'badge-red'   },
+  accepte:        { label:'Accepté ✓',      cls:'badge-green' },
+  refuse:         { label:'Refusé',         cls:'badge-red'   },
+  expire:         { label:'Expiré',         cls:'badge-grey'  },
+};
+function badgeBadge(statut) {
+  const s = STATUTS[statut] || { label: statut, cls: 'badge-grey' };
+  return `<span class="badge ${s.cls}">${s.label}</span>`;
+}
+
+function roleLabel(role) {
+  const m = { admin:'Administrateur', directeur:'Directeur Général', comptable:'Comptable', technicien:'Technicien', client:'Client' };
+  return m[role] || role;
+}
+function initials(prenom, nom) {
+  return ((prenom||'')[0]||(nom||'')[0]||'?').toUpperCase() + ((nom||'')[0]||(prenom||'')[1]||'?').toUpperCase();
+}
+
+// TOAST
+function showToast(type, title, msg) {
+  const icons = {
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    error:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>',
+    info:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<div class="toast-icon">${icons[type]||icons.info}</div><div class="toast-text"><strong>${title}</strong><p>${msg}</p></div>`;
+  $('toast-container').appendChild(t);
+  setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+// ============================================================
+//  AUTH
+// ============================================================
+let currentUser = null;
+async function checkAuth() {
+  const res  = await fetch('/api/auth/me');
+  const data = await res.json();
+  if (!data.ok) { window.location.href = '/login'; return; }
+  currentUser = data.user;
+  const av = initials(currentUser.prenom, currentUser.nom);
+  const rl = roleLabel(currentUser.role);
+  const nm = currentUser.prenom + ' ' + currentUser.nom;
+  $('sideAvatar').textContent = av; $('sideNom').textContent = nm; $('sideRole').textContent = rl;
+  $('topAvatar').textContent  = av; $('topNom').textContent  = nm; $('topRole').textContent  = rl;
+}
+async function logout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/login';
+}
+
+// ============================================================
+//  CHARGEMENT DONNÉES
+// ============================================================
+async function chargerClients() {
+  const res  = await fetch('/api/clients');
+  const data = await res.json();
+  if (data.ok) {
+    clients = data.clients;
+    const sel = $('formClientId');
+    sel.innerHTML = '<option value="">-- Sélectionner un client --</option>';
+    clients.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.nom + (c.ville ? ` (${c.ville})` : '');
+      sel.appendChild(opt);
+    });
+  }
+}
+
+async function chargerDevis() {
+  const statut  = $('filtreStatut').value;
+  const service = $('filtreService').value;
+  const q       = $('searchInput').value;
+  let url = '/api/devis?';
+  if (statut)  url += `statut=${statut}&`;
+  if (service) url += `service=${encodeURIComponent(service)}&`;
+  if (q)       url += `q=${encodeURIComponent(q)}&`;
+
+  const res  = await fetch(url);
+  const data = await res.json();
+  if (!data.ok) return;
+  allDevis = data.devis;
+  renderTable(allDevis);
+}
+
+async function chargerKPIs() {
+  const res  = await fetch('/api/devis/stats/resume');
+  const data = await res.json();
+  if (!data.ok) return;
+  const s = data.stats;
+  $('kpi-pipeline').textContent = formatFCFAshort(s.pipeline);
+  $('kpi-attente').textContent  = s.en_attente;
+  $('kpi-acceptes').textContent = s.acceptes;
+  $('kpi-taux').textContent     = s.taux + '%';
+}
+
+// ============================================================
+//  TABLE
+// ============================================================
+function renderTable(devis) {
+  const tbody = $('devisTbody');
+  $('devisCount').textContent = `${devis.length} devis trouvé${devis.length>1?'s':''}`;
+  $('tableInfo').textContent  = `${devis.length} résultat${devis.length>1?'s':''}`;
+
+  if (devis.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg><p>Aucun devis trouvé</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = devis.map(d => `
+    <tr style="cursor:pointer;" onclick="ouvrirDetail(${d.id})">
+      <td><strong>${d.reference}</strong></td>
+      <td>${d.client_nom || '—'}</td>
+      <td>${d.service}</td>
+      <td><strong>${formatFCFA(d.montant_ht)}</strong></td>
+      <td>${formatDate(d.date_emission)}</td>
+      <td>${formatDate(d.date_validite)}</td>
+      <td>${badgeBadge(d.statut)}</td>
+      <td onclick="event.stopPropagation()">
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-sm btn-ghost" style="padding:5px 9px;font-size:.68rem;" onclick="ouvrirDetail(${d.id})">Voir</button>
+          <button class="btn btn-sm btn-amber" style="padding:5px 9px;font-size:.68rem;" onclick="imprimerPDF(${d.id})">PDF</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filtrer() { chargerDevis(); }
+function resetFiltres() {
+  $('searchInput').value = '';
+  $('filtreStatut').value = '';
+  $('filtreService').value = '';
+  chargerDevis();
+}
+
+// ============================================================
+//  MODAL NOUVEAU DEVIS
+// ============================================================
+function openModal() {
+  $('editDevisId').value = '';
+  $('modalTitle').textContent = 'Nouveau Devis';
+  $('formClientId').value = '';
+  $('formService').value = '';
+  $('formChefProjet').value = '';
+  $('formDescription').value = '';
+  // Date validité : dans 30 jours
+  const d = new Date(); d.setDate(d.getDate() + 30);
+  $('formDateValidite').value = d.toISOString().split('T')[0];
+  $('lignesTbody').innerHTML = '';
+  calculerTotaux();
+  ajouterLigne(); ajouterLigne(); // 2 lignes par défaut
+  $('modalOverlay').classList.add('open');
+}
+function closeModal() { $('modalOverlay').classList.remove('open'); }
+
+let ligneIndex = 0;
+function ajouterLigne() {
+  const i = ligneIndex++;
+  const tr = document.createElement('tr');
+  tr.id = `ligne-${i}`;
+  tr.innerHTML = `
+    <td><input type="text" placeholder="Description de la prestation" oninput="calculerTotaux()"></td>
+    <td><input type="text" placeholder="m², T, forfait..." style="width:80px;" oninput="calculerTotaux()"></td>
+    <td><input type="number" placeholder="1" min="0" step="0.01" value="1" oninput="calculerLigne(${i})" style="width:80px;"></td>
+    <td><input type="number" placeholder="0" min="0" step="1" value="0" oninput="calculerLigne(${i})"></td>
+    <td class="td-total" id="total-${i}">0 FCFA</td>
+    <td><button class="btn-del-ligne" onclick="supprimerLigne(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td>
+  `;
+  $('lignesTbody').appendChild(tr);
+}
+function supprimerLigne(i) {
+  const tr = $(`ligne-${i}`);
+  if (tr) tr.remove();
+  calculerTotaux();
+}
+function calculerLigne(i) {
+  const tr = $(`ligne-${i}`);
+  if (!tr) return;
+  const inputs = tr.querySelectorAll('input[type="number"]');
+  const qte = parseFloat(inputs[0].value) || 0;
+  const pu  = parseFloat(inputs[1].value) || 0;
+  const total = qte * pu;
+  $(`total-${i}`).textContent = total.toLocaleString('fr-FR') + ' FCFA';
+  calculerTotaux();
+}
+function calculerTotaux() {
+  let ht = 0;
+  $('lignesTbody').querySelectorAll('tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input[type="number"]');
+    if (inputs.length >= 2) {
+      ht += (parseFloat(inputs[0].value)||0) * (parseFloat(inputs[1].value)||0);
+    }
+  });
+  const tva = ht * 0.18;
+  const ttc = ht + tva;
+  $('totalHT').textContent  = ht.toLocaleString('fr-FR')  + ' FCFA';
+  $('totalTVA').textContent = tva.toLocaleString('fr-FR') + ' FCFA';
+  $('totalTTC').textContent = ttc.toLocaleString('fr-FR') + ' FCFA';
+}
+
+async function sauvegarderDevis() {
+  const client_id    = $('formClientId').value;
+  const service      = $('formService').value;
+  const chef_projet  = $('formChefProjet').value;
+  const description  = $('formDescription').value;
+  const date_validite= $('formDateValidite').value;
+
+  if (!client_id || !service) {
+    showToast('warning', 'Champs requis', 'Veuillez sélectionner un client et un service.');
+    return;
+  }
+
+  // Collecter les lignes
+  const lignes = [];
+  $('lignesTbody').querySelectorAll('tr').forEach(tr => {
+    const textInputs   = tr.querySelectorAll('input[type="text"]');
+    const numberInputs = tr.querySelectorAll('input[type="number"]');
+    const designation  = textInputs[0]?.value?.trim();
+    if (!designation) return;
+    lignes.push({
+      designation,
+      unite:        textInputs[1]?.value || '',
+      quantite:     parseFloat(numberInputs[0]?.value) || 1,
+      prix_unitaire:parseFloat(numberInputs[1]?.value) || 0,
+    });
+  });
+
+  try {
+    const res  = await fetch('/api/devis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id, service, chef_projet, description, date_validite, lignes })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('success', 'Devis créé', `${data.reference} enregistré avec succès.`);
+      closeModal();
+      await chargerDevis();
+      await chargerKPIs();
+    } else {
+      showToast('error', 'Erreur', data.error || 'Impossible de créer le devis.');
+    }
+  } catch (err) {
+    showToast('error', 'Erreur', 'Problème de connexion au serveur.');
+  }
+}
+
+// ============================================================
+//  DETAIL PANEL
+// ============================================================
+async function ouvrirDetail(id) {
+  $('detailRef').textContent = 'Chargement...';
+  $('detailBody').innerHTML = '<div class="loading-state"><div class="spinner"></div></div>';
+  $('detailFooter').innerHTML = '';
+  $('detailOverlay').classList.add('open');
+  $('detailPanel').classList.add('open');
+
+  const res  = await fetch(`/api/devis/${id}`);
+  const data = await res.json();
+  if (!data.ok) { showToast('error','Erreur','Impossible de charger le devis.'); return; }
+
+  const { devis: d, lignes } = data;
+  $('detailRef').textContent = d.reference;
+
+  const lignesHTML = lignes.length ? `
+    <table style="width:100%;border-collapse:collapse;font-size:.81rem;margin-top:4px;">
+      <thead>
+        <tr style="border-bottom:1px solid rgba(255,255,255,.08);">
+          <th style="text-align:left;padding:6px 8px;font-family:var(--font-c);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-mid);">Prestation</th>
+          <th style="text-align:right;padding:6px 8px;font-family:var(--font-c);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-mid);">Qté</th>
+          <th style="text-align:right;padding:6px 8px;font-family:var(--font-c);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-mid);">PU</th>
+          <th style="text-align:right;padding:6px 8px;font-family:var(--font-c);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-mid);">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${lignes.map(l => `
+          <tr style="border-bottom:1px solid rgba(255,255,255,.05);">
+            <td style="padding:7px 8px;color:var(--off-white);">${l.designation}</td>
+            <td style="padding:7px 8px;text-align:right;color:var(--grey-light);">${l.quantite} ${l.unite||''}</td>
+            <td style="padding:7px 8px;text-align:right;color:var(--grey-light);">${parseFloat(l.prix_unitaire).toLocaleString('fr-FR')}</td>
+            <td style="padding:7px 8px;text-align:right;font-weight:600;color:var(--white);">${parseFloat(l.total).toLocaleString('fr-FR')}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);">
+      <div style="display:flex;gap:32px;"><span style="font-size:.76rem;color:var(--grey-mid);">Sous-total HT</span><span style="font-size:.84rem;color:var(--white);font-weight:600;">${formatFCFA(d.montant_ht)}</span></div>
+      <div style="display:flex;gap:32px;"><span style="font-size:.76rem;color:var(--grey-mid);">TVA (${d.tva}%)</span><span style="font-size:.84rem;color:var(--white);">${formatFCFA(d.montant_ht * d.tva / 100)}</span></div>
+      <div style="display:flex;gap:32px;"><span style="font-family:var(--font-c);font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);">Total TTC</span><span style="font-family:var(--font-d);font-size:1.3rem;color:var(--amber);">${formatFCFA(d.montant_ttc)}</span></div>
+    </div>
+  ` : '<p style="color:var(--grey-mid);font-size:.84rem;">Aucune ligne de prestation.</p>';
+
+  $('detailBody').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+      <div>
+        <div style="font-size:1rem;font-weight:700;color:var(--white);">${d.reference}</div>
+        <div style="font-size:.78rem;color:var(--grey-mid);margin-top:2px;">${d.service}</div>
+      </div>
+      ${badgeBadge(d.statut)}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Informations générales</div>
+      <dl>
+        <div class="detail-row"><dt>Client</dt><dd><strong>${d.client_nom||'—'}</strong></dd></div>
+        <div class="detail-row"><dt>Contact</dt><dd>${d.contact_nom||'—'} ${d.contact_poste?'· '+d.contact_poste:''}</dd></div>
+        <div class="detail-row"><dt>Chef de projet</dt><dd>${d.chef_projet||'—'}</dd></div>
+        <div class="detail-row"><dt>Date émission</dt><dd>${formatDate(d.date_emission)}</dd></div>
+        <div class="detail-row"><dt>Validité</dt><dd>${formatDate(d.date_validite)}</dd></div>
+      </dl>
+    </div>
+    ${d.description ? `<div class="detail-section"><div class="detail-section-title">Description</div><p style="font-size:.83rem;color:var(--grey-light);line-height:1.7;background:var(--navy-light);padding:12px;border-radius:var(--r);border:1px solid rgba(255,255,255,.06);">${d.description}</p></div>` : ''}
+    <div class="detail-section">
+      <div class="detail-section-title">Détail des prestations</div>
+      ${lignesHTML}
+    </div>
+    <div class="detail-section">
+      <div class="detail-section-title">Changer le statut</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${['en_attente','envoye','accepte','refuse'].map(s => `
+          <button class="btn btn-sm ${d.statut===s?'btn-amber':'btn-ghost'}" onclick="changerStatut(${d.id},'${s}')" style="font-size:.66rem;">
+            ${STATUTS[s].label}
+          </button>`).join('')}
+      </div>
+    </div>
+  `;
+
+  $('detailFooter').innerHTML = `
+    <button class="btn btn-sm btn-amber" onclick="imprimerPDF(${d.id})">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimer / PDF
+    </button>
+    <button class="btn btn-sm btn-danger" onclick="supprimerDevis(${d.id})">Supprimer</button>
+  `;
+}
+
+function closeDetail() {
+  $('detailOverlay').classList.remove('open');
+  $('detailPanel').classList.remove('open');
+}
+
+async function changerStatut(id, statut) {
+  const res  = await fetch(`/api/devis/${id}/statut`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ statut })
+  });
+  const data = await res.json();
+  if (data.ok) {
+    showToast('success', 'Statut mis à jour', `Nouveau statut : ${STATUTS[statut].label}`);
+    closeDetail();
+    await chargerDevis();
+    await chargerKPIs();
+  }
+}
+
+async function supprimerDevis(id) {
+  if (!confirm('Confirmer la suppression de ce devis ?')) return;
+  const res = await fetch(`/api/devis/${id}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.ok) {
+    showToast('success', 'Supprimé', 'Le devis a été supprimé.');
+    closeDetail();
+    await chargerDevis();
+    await chargerKPIs();
+  }
+}
+
+// ============================================================
+//  PDF (impression navigateur)
+// ============================================================
+async function imprimerPDF(id) {
+  const res  = await fetch(`/api/devis/${id}`);
+  const data = await res.json();
+  if (!data.ok) return;
+  const { devis: d, lignes } = data;
+
+  const lignesRows = lignes.map(l => `
+    <tr>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;">${l.designation}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:center;">${l.quantite} ${l.unite||''}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right;">${parseFloat(l.prix_unitaire).toLocaleString('fr-FR')}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid #eee;text-align:right;font-weight:600;">${parseFloat(l.total).toLocaleString('fr-FR')}</td>
+    </tr>`).join('');
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+  <title>Devis ${d.reference}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 13px; color: #222; margin: 0; padding: 0; }
+    .page { padding: 40px 50px; max-width: 800px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 3px solid #f5a623; }
+    .logo-name { font-size: 22px; font-weight: 900; letter-spacing: 2px; color: #0b1220; }
+    .logo-sub { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #f5a623; }
+    .ref-box { text-align: right; }
+    .ref-box .ref { font-size: 20px; font-weight: 900; color: #0b1220; }
+    .ref-box .date { font-size: 11px; color: #666; margin-top: 4px; }
+    .section { margin-bottom: 28px; }
+    .section-title { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #f5a623; border-bottom: 1px solid #eee; padding-bottom: 6px; margin-bottom: 12px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .field { margin-bottom: 8px; }
+    .field .lbl { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; }
+    .field .val { font-size: 13px; font-weight: 600; color: #222; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: #0b1220; color: white; }
+    thead th { padding: 10px 10px; text-align: left; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
+    .totaux { display: flex; flex-direction: column; align-items: flex-end; margin-top: 16px; gap: 6px; }
+    .total-row { display: flex; gap: 60px; align-items: center; }
+    .total-row .l { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+    .total-row .v { font-size: 13px; font-weight: 600; min-width: 160px; text-align: right; }
+    .total-ttc .l { color: #f5a623; font-weight: 700; }
+    .total-ttc .v { font-size: 20px; font-weight: 900; color: #f5a623; }
+    .footer { margin-top: 60px; padding-top: 16px; border-top: 1px solid #eee; font-size: 11px; color: #999; text-align: center; }
+    .statut-box { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+    @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  </style></head><body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <div class="logo-name">ESPOIR CONSTRUCTION</div>
+        <div class="logo-sub">Groupe Industriel & BTP</div>
+        <div style="margin-top:12px;font-size:11px;color:#666;">Avenue du Commerce, Zone Industrielle<br>Cotonou, République du Bénin<br>+229 01 20 30 40 50 · contact@espoirconstruction.bj</div>
+      </div>
+      <div class="ref-box">
+        <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;">Devis N°</div>
+        <div class="ref">${d.reference}</div>
+        <div class="date">Émis le ${formatDate(d.date_emission)}</div>
+        <div class="date">Valide jusqu'au ${formatDate(d.date_validite)}</div>
+        <div style="margin-top:8px;"><span class="statut-box">${STATUTS[d.statut]?.label||d.statut}</span></div>
+      </div>
+    </div>
+
+    <div class="grid-2 section">
+      <div>
+        <div class="section-title">Client</div>
+        <div class="field"><div class="val">${d.client_nom||'—'}</div></div>
+        <div class="field"><div class="lbl">Contact</div><div class="val">${d.contact_nom||'—'}</div></div>
+        ${d.client_ville ? `<div class="field"><div class="lbl">Ville</div><div class="val">${d.client_ville}</div></div>` : ''}
+        ${d.client_email ? `<div class="field"><div class="lbl">Email</div><div class="val">${d.client_email}</div></div>` : ''}
+      </div>
+      <div>
+        <div class="section-title">Détails</div>
+        <div class="field"><div class="lbl">Service</div><div class="val">${d.service}</div></div>
+        <div class="field"><div class="lbl">Chef de projet</div><div class="val">${d.chef_projet||'—'}</div></div>
+      </div>
+    </div>
+
+    ${d.description ? `<div class="section"><div class="section-title">Description des travaux</div><p style="font-size:12px;line-height:1.7;color:#444;">${d.description}</p></div>` : ''}
+
+    <div class="section">
+      <div class="section-title">Détail des prestations</div>
+      <table>
+        <thead><tr><th>Désignation</th><th style="text-align:center;">Quantité</th><th style="text-align:right;">Prix unitaire (FCFA)</th><th style="text-align:right;">Total (FCFA)</th></tr></thead>
+        <tbody>${lignesRows}</tbody>
+      </table>
+      <div class="totaux">
+        <div class="total-row"><span class="l">Sous-total HT</span><span class="v">${parseFloat(d.montant_ht).toLocaleString('fr-FR')} FCFA</span></div>
+        <div class="total-row"><span class="l">TVA (${d.tva}%)</span><span class="v">${(d.montant_ht * d.tva / 100).toLocaleString('fr-FR')} FCFA</span></div>
+        <div class="total-row total-ttc"><span class="l">TOTAL TTC</span><span class="v">${parseFloat(d.montant_ttc).toLocaleString('fr-FR')} FCFA</span></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Espoir Construction — RCCM : BJ-COT-2006-B-12345 · NIF : 2006123456789 · RC : 123456<br>
+      Ce devis est valable jusqu'au ${formatDate(d.date_validite)}. Merci de votre confiance.
+    </div>
+  </div>
+  <script>window.onload = () => { window.print(); }<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+// ============================================================
+//  EXPORT CSV
+// ============================================================
+function exportCSV() {
+  if (!allDevis.length) { showToast('warning','Export','Aucun devis à exporter.'); return; }
+  const header = ['Référence','Client','Service','Montant HT','TVA','Montant TTC','Statut','Date émission','Date validité'];
+  const rows = allDevis.map(d => [
+    d.reference, d.client_nom||'', d.service,
+    d.montant_ht, d.tva, d.montant_ttc,
+    d.statut, d.date_emission||'', d.date_validite||''
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(';')).join('\n');
+  const blob = new Blob(['\ufeff'+csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `devis-espoir-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('success','Export','Fichier CSV téléchargé.');
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+(async () => {
+  await checkAuth();
+  await chargerClients();
+  await Promise.all([chargerDevis(), chargerKPIs()]);
+})();
+</script>
+</body>
+</html>
