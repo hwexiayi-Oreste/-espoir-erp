@@ -596,7 +596,6 @@ async function ouvrirDetail(id) {
 
   const c = data.chantier;
   const phases = data.phases || [];
-  const phases = data.phases || [];
   $('detailRef').textContent = c.reference;
 
   const budgetPct = c.budget > 0 ? Math.min(100, Math.round((c.depense/c.budget)*100)) : 0;
