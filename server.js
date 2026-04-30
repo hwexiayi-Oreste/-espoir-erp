@@ -22,6 +22,7 @@ app.use('/api/auth',      require('./routes/auth'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/devis',     require('./routes/devis'));
 app.use('/api/clients',   require('./routes/clients'));
+app.use('/api/chantiers', require('./routes/chantiers'));
 
 // Pages HTML
 app.get('/login', (req, res) => {
@@ -40,6 +41,10 @@ app.get('/clients', (req, res) => {
   if (!req.session || !req.session.user) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'public', 'clients.html'));
 });
+app.get('/chantiers', (req, res) => {
+  if (!req.session || !req.session.user) return res.redirect('/login');
+  res.sendFile(path.join(__dirname, 'public', 'chantiers.html'));
+});
 app.get('/', (req, res) => res.redirect('/login'));
 
 app.listen(PORT, '0.0.0.0', () => {
@@ -56,7 +61,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('------------------------------------------------');
   console.log('  admin@espoir.bj       / admin123');
   console.log('  directeur@espoir.bj   / dir123');
-  console.log('  comptable@espoir.bj   / compta123');
-  console.log('  technique@espoir.bj   / tech123');
   console.log('================================================\n');
 });

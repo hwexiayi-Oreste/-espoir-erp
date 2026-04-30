@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chantiers — Espoir Construction ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+<style>
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--navy-mid);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-lg);width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.6);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:var(--navy-mid);z-index:1;}
+.modal-header h3{font-family:var(--font-d);font-size:1.6rem;letter-spacing:.04em;}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:flex-end;gap:10px;}
+
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:none;}
+.detail-overlay.open{display:block;}
+.detail-panel{position:fixed;top:0;right:0;bottom:0;width:560px;max-width:95vw;background:var(--navy-mid);border-left:1px solid rgba(255,255,255,.1);z-index:401;transform:translateX(100%);transition:transform .3s ease;overflow-y:auto;display:flex;flex-direction:column;}
+.detail-panel.open{transform:translateX(0);}
+.detail-panel-header{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:var(--navy-mid);z-index:1;}
+.detail-panel-header h3{font-family:var(--font-d);font-size:1.4rem;}
+.detail-panel-body{padding:22px;flex:1;display:flex;flex-direction:column;gap:20px;}
+.detail-panel-footer{padding:16px 22px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:8px;flex-wrap:wrap;}
+.detail-section{display:flex;flex-direction:column;gap:10px;}
+.detail-section-title{font-family:var(--font-c);font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.07);}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+.detail-row dt{font-size:.78rem;color:var(--grey-mid);flex-shrink:0;}
+.detail-row dd{font-size:.84rem;color:var(--white);font-weight:500;text-align:right;}
+
+/* CHANTIER CARDS */
+.chantiers-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+.chantier-card{background:var(--navy-mid);border:1px solid rgba(255,255,255,.07);border-radius:var(--r-lg);padding:22px;cursor:pointer;transition:var(--transition);position:relative;overflow:hidden;}
+.chantier-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(to right,var(--amber),transparent);transform:scaleX(0);transform-origin:left;transition:transform .4s ease;}
+.chantier-card:hover{border-color:rgba(245,166,35,.2);transform:translateY(-2px);}
+.chantier-card:hover::before{transform:scaleX(1);}
+.chantier-card.retard{border-color:rgba(239,68,68,.2);}
+.chantier-card.retard::before{background:linear-gradient(to right,var(--red),transparent);}
+.chantier-ref{font-family:var(--font-c);font-size:.68rem;font-weight:700;letter-spacing:.15em;color:var(--amber);margin-bottom:6px;}
+.chantier-name{font-size:.95rem;font-weight:700;color:var(--white);margin-bottom:4px;}
+.chantier-sub{font-size:.78rem;color:var(--grey-mid);display:flex;align-items:center;gap:5px;margin-bottom:14px;}
+.chantier-sub svg{width:11px;height:11px;}
+.chantier-progress-wrap{margin-bottom:12px;}
+.chantier-meta-row{display:flex;justify-content:space-between;align-items:center;}
+.chantier-meta-item{font-size:.74rem;color:var(--grey-mid);}
+.chantier-meta-item strong{display:block;font-size:.82rem;color:var(--grey-light);font-weight:600;}
+
+/* GANTT */
+.gantt-container{overflow-x:auto;padding-bottom:8px;}
+.gantt-header{display:flex;padding-left:200px;margin-bottom:6px;}
+.gantt-month{flex:1;font-family:var(--font-c);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--grey-mid);text-align:center;min-width:60px;}
+.gantt-row{display:flex;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.gantt-row:last-child{border-bottom:none;}
+.gantt-label{width:200px;flex-shrink:0;font-size:.8rem;color:var(--grey-light);padding-right:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gantt-track{flex:1;height:24px;background:rgba(255,255,255,.04);border-radius:3px;position:relative;min-width:360px;}
+.gantt-bar{position:absolute;top:0;height:100%;border-radius:3px;display:flex;align-items:center;padding:0 8px;font-family:var(--font-c);font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;}
+.gantt-bar.green{background:var(--green);color:#fff;}
+.gantt-bar.amber{background:var(--amber);color:var(--navy);}
+.gantt-bar.red{background:var(--red);color:#fff;}
+.gantt-bar.blue{background:var(--blue);color:#fff;}
+
+/* AVANCEMENT SLIDER */
+.avancement-slider{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:4px;background:rgba(255,255,255,.1);outline:none;cursor:pointer;}
+.avancement-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--amber);cursor:pointer;border:2px solid var(--navy-mid);}
+.avancement-display{font-family:var(--font-d);font-size:2rem;color:var(--amber);text-align:center;margin:8px 0;}
+</style>
+</head>
+<body>
+<div class="erp-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20L12 4L22 20"/><path d="M6 20L12 10L18 20"/></svg></div>
+      <div><div class="logo-name">ESPOIR ERP</div><div class="logo-sub">Plateforme de gestion</div></div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sideAvatar">—</div>
+      <div><div class="user-name" id="sideNom">—</div><div class="user-role" id="sideRole">—</div></div>
+    </div>
+    <nav class="sidebar-nav">
+      <p class="nav-section">Principal</p>
+      <button class="nav-item" onclick="location.href='/dashboard'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
+      </button>
+      <p class="nav-section">Commercial</p>
+      <button class="nav-item" onclick="location.href='/devis'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Devis &amp; Offres
+      </button>
+      <button class="nav-item" onclick="location.href='/clients'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Clients
+      </button>
+      <p class="nav-section">Opérations</p>
+      <button class="nav-item active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Chantiers
+      </button>
+      <button class="nav-item" style="opacity:.5;cursor:not-allowed;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>Transport
+        <span style="margin-left:auto;background:rgba(90,112,144,.15);color:var(--grey-mid);font-family:var(--font-c);font-size:.58rem;font-weight:700;padding:2px 6px;border-radius:20px;">Bientôt</span>
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="sidebar-bottom-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Chantiers</div>
+      <div class="topbar-bread">ERP · <span>Suivi opérationnel</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="user-avatar" id="topAvatar">—</div>
+        <div><div class="user-name" id="topNom">—</div><div class="user-role" id="topRole">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="erp-main">
+
+    <div class="page-header">
+      <div><h2>Suivi des Chantiers</h2><p id="chantierCount">Chargement...</p></div>
+      <div class="page-actions">
+        <button class="btn btn-sm btn-ghost" onclick="toggleGantt()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Planning Gantt
+        </button>
+        <button class="btn btn-sm btn-amber" onclick="openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouveau Chantier
+        </button>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div></div><div class="kpi-value" id="kpi-encours">—</div><div class="kpi-label">En Cours</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div><div class="kpi-value" id="kpi-retard">—</div><div class="kpi-label">En Retard</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div></div><div class="kpi-value" id="kpi-planifie">—</div><div class="kpi-label">Planifiés</div></div>
+      <div class="kpi-card"><div class="kpi-top"><div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div><div class="kpi-value" id="kpi-budget">—</div><div class="kpi-label">Budget Actif FCFA</div></div>
+    </div>
+
+    <!-- GANTT (caché par défaut) -->
+    <div id="ganttSection" style="display:none;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Planning Gantt — Chantiers Actifs
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <span style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--grey-light);"><span style="width:10px;height:10px;background:var(--green);border-radius:2px;display:inline-block;"></span>En cours</span>
+            <span style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--grey-light);"><span style="width:10px;height:10px;background:var(--red);border-radius:2px;display:inline-block;"></span>Retard</span>
+            <span style="display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--grey-light);"><span style="width:10px;height:10px;background:var(--blue);border-radius:2px;display:inline-block;"></span>Planifié</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="ganttContent"><div class="loading-state"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <input class="filter-input" type="text" id="searchInput" placeholder="🔍 Rechercher un chantier..." oninput="filtrer()" style="min-width:240px;">
+      <select class="filter-select" id="filtreStatut" onchange="filtrer()">
+        <option value="">Tous les statuts</option>
+        <option value="planifie">Planifié</option>
+        <option value="en_cours">En cours</option>
+        <option value="retard">En retard</option>
+        <option value="livre">Livré</option>
+      </select>
+      <select class="filter-select" id="filtreService" onchange="filtrer()">
+        <option value="">Tous les services</option>
+        <option value="Construction Metallique">Construction Métallique</option>
+        <option value="Genie Civil">Génie Civil</option>
+        <option value="Transport">Transport</option>
+        <option value="Manutention">Manutention</option>
+      </select>
+      <button class="btn btn-sm btn-ghost" onclick="resetFiltres()">Réinitialiser</button>
+    </div>
+
+    <!-- Cards -->
+    <div id="mainContent">
+      <div class="loading-state"><div class="spinner"></div><p>Chargement...</p></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Nouveau Chantier</h3>
+      <button class="btn btn-sm btn-ghost" onclick="closeModal()" style="padding:6px 10px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom du chantier *</label>
+          <input type="text" id="fNom" placeholder="Ex: Hangar industriel Bohicon">
+        </div>
+        <div class="form-group">
+          <label>Référence</label>
+          <input type="text" id="fRef" placeholder="Auto-générée" disabled style="opacity:.5;">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client</label>
+          <select id="fClientId"><option value="">-- Sélectionner --</option></select>
+        </div>
+        <div class="form-group">
+          <label>Type de service *</label>
+          <select id="fService">
+            <option value="">-- Sélectionner --</option>
+            <option value="Construction Metallique">Construction Métallique</option>
+            <option value="Genie Civil">Génie Civil</option>
+            <option value="Transport">Transport</option>
+            <option value="Manutention">Manutention</option>
+            <option value="Mixte">Mixte</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Lieu / Localisation</label>
+          <input type="text" id="fLieu" placeholder="Cotonou, Zone Industrielle...">
+        </div>
+        <div class="form-group">
+          <label>Chef de chantier</label>
+          <input type="text" id="fChef" placeholder="Ing. Nom Prénom">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date de début</label>
+          <input type="date" id="fDebut">
+        </div>
+        <div class="form-group">
+          <label>Livraison prévue</label>
+          <input type="date" id="fFin">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Budget (FCFA)</label>
+          <input type="number" id="fBudget" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="fStatut">
+            <option value="planifie">Planifié</option>
+            <option value="en_cours">En cours</option>
+            <option value="retard">En retard</option>
+            <option value="livre">Livré</option>
+          </select>
+        </div>
+      </div>
+      <!-- Avancement (visible uniquement en modification) -->
+      <div id="avancementGroup" style="display:none;">
+        <div class="form-group">
+          <label>Avancement global</label>
+          <div class="avancement-display" id="avancementDisplay">0%</div>
+          <input type="range" class="avancement-slider" id="fAvancement" min="0" max="100" value="0"
+            oninput="document.getElementById('avancementDisplay').textContent=this.value+'%'">
+          <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--grey-dark);margin-top:4px;"><span>0%</span><span>50%</span><span>100%</span></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Dépenses à ce jour (FCFA)</label>
+            <input type="number" id="fDepense" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Date de livraison réelle</label>
+            <input type="date" id="fFinReelle">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notes / Observations</label>
+        <textarea id="fNotes" placeholder="Observations, risques, points d'attention..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-sm btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-sm btn-amber" onclick="sauvegarder()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel">
+  <div class="detail-panel-header">
+    <h3 id="detailRef">—</h3>
+    <button class="btn btn-sm btn-ghost" onclick="closeDetail()" style="padding:6px 10px;">✕</button>
+  </div>
+  <div class="detail-panel-body" id="detailBody">
+    <div class="loading-state"><div class="spinner"></div></div>
+  </div>
+  <div class="detail-panel-footer" id="detailFooter"></div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let allChantiers = [];
+let allClients   = [];
+let ganttVisible = false;
+let currentUser  = null;
+
+function formatFCFA(n) {
+  if (!n && n!==0) return '—';
+  n = parseFloat(n);
+  if (n>=1e9) return (n/1e9).toFixed(1)+' Md';
+  if (n>=1e6) return (n/1e6).toFixed(1)+'M';
+  return n.toLocaleString('fr-FR');
+}
+function formatDate(d) {
+  if (!d) return '—';
+  const [y,m,j] = d.split('-');
+  return `${j}/${m}/${y}`;
+}
+function roleLabel(role) {
+  const m={admin:'Administrateur',directeur:'Directeur Général',comptable:'Comptable',technicien:'Technicien',client:'Client'};
+  return m[role]||role;
+}
+function initials(nom) {
+  return (nom||'??').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+}
+
+const STATUT = {
+  en_cours: { label:'En cours',  cls:'badge-green'  },
+  retard:   { label:'Retard',    cls:'badge-red'    },
+  planifie: { label:'Planifié',  cls:'badge-blue'   },
+  livre:    { label:'Livré ✓',   cls:'badge-grey'   },
+};
+function badge(s) {
+  const st = STATUT[s]||{label:s,cls:'badge-grey'};
+  return `<span class="badge ${st.cls}">${st.label}</span>`;
+}
+function progressColor(pct, statut) {
+  if (statut==='retard') return 'red';
+  if (pct>=80) return 'green';
+  if (pct>=40) return 'amber';
+  return 'blue';
+}
+
+function showToast(type, title, msg) {
+  const icons={
+    success:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    error:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    warning:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>',
+    info:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
+  };
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<div class="toast-icon">${icons[type]||icons.info}</div><div class="toast-text"><strong>${title}</strong><p>${msg}</p></div>`;
+  $('toast-container').appendChild(t);
+  setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300);},3500);
+}
+
+async function checkAuth() {
+  const res  = await fetch('/api/auth/me');
+  const data = await res.json();
+  if (!data.ok) { window.location.href='/login'; return; }
+  currentUser = data.user;
+  const av=initials(data.user.prenom+' '+data.user.nom);
+  const rl=roleLabel(data.user.role);
+  const nm=data.user.prenom+' '+data.user.nom;
+  $('sideAvatar').textContent=av; $('sideNom').textContent=nm; $('sideRole').textContent=rl;
+  $('topAvatar').textContent=av;  $('topNom').textContent=nm;  $('topRole').textContent=rl;
+}
+async function logout() {
+  await fetch('/api/auth/logout',{method:'POST'});
+  window.location.href='/login';
+}
+
+async function chargerClients() {
+  const res  = await fetch('/api/clients');
+  const data = await res.json();
+  if (!data.ok) return;
+  allClients = data.clients;
+  const sel  = $('fClientId');
+  sel.innerHTML = '<option value="">-- Sélectionner --</option>';
+  allClients.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.nom;
+    sel.appendChild(o);
+  });
+}
+
+async function chargerKPIs() {
+  const res  = await fetch('/api/chantiers/stats');
+  const data = await res.json();
+  if (!data.ok) return;
+  const s = data.stats;
+  $('kpi-encours').textContent  = s.en_cours;
+  $('kpi-retard').textContent   = s.retard;
+  $('kpi-planifie').textContent = s.planifie;
+  $('kpi-budget').textContent   = formatFCFA(s.budget_total)+' FCFA';
+}
+
+async function chargerChantiers() {
+  const statut  = $('filtreStatut').value;
+  const service = $('filtreService').value;
+  const q       = $('searchInput').value;
+  let url = '/api/chantiers?';
+  if (statut)  url += `statut=${statut}&`;
+  if (service) url += `service=${encodeURIComponent(service)}&`;
+  if (q)       url += `q=${encodeURIComponent(q)}&`;
+
+  const res  = await fetch(url);
+  const data = await res.json();
+  if (!data.ok) return;
+  allChantiers = data.chantiers;
+  renderChantiers(allChantiers);
+  if (ganttVisible) renderGantt(allChantiers);
+}
+
+function renderChantiers(chantiers) {
+  $('chantierCount').textContent = `${chantiers.length} chantier${chantiers.length>1?'s':''} trouvé${chantiers.length>1?'s':''}`;
+  const main = $('mainContent');
+
+  if (chantiers.length === 0) {
+    main.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><p>Aucun chantier trouvé</p></div>`;
+    return;
+  }
+
+  main.innerHTML = `<div class="chantiers-grid">${chantiers.map(c => `
+    <div class="chantier-card ${c.statut==='retard'?'retard':''}" onclick="ouvrirDetail(${c.id})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div class="chantier-ref">${c.reference}</div>
+        ${badge(c.statut)}
+      </div>
+      <div class="chantier-name">${c.nom}</div>
+      <div class="chantier-sub">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${c.lieu||'—'} · ${c.type_service||'—'}
+      </div>
+      <div class="chantier-progress-wrap">
+        <div class="progress-label"><span>Avancement</span><span>${c.avancement}%</span></div>
+        <div class="progress-bar"><div class="progress-fill ${progressColor(c.avancement,c.statut)}" style="width:${c.avancement}%"></div></div>
+      </div>
+      <div class="chantier-meta-row">
+        <div class="chantier-meta-item"><strong>${c.chef_chantier||'—'}</strong>Chef de chantier</div>
+        <div class="chantier-meta-item" style="text-align:right;"><strong>${formatDate(c.date_fin_prevue)}</strong>Livraison prévue</div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// GANTT
+function toggleGantt() {
+  ganttVisible = !ganttVisible;
+  $('ganttSection').style.display = ganttVisible ? 'block' : 'none';
+  if (ganttVisible) renderGantt(allChantiers);
+}
+
+function renderGantt(chantiers) {
+  const actifs = chantiers.filter(c => c.statut !== 'livre');
+  if (!actifs.length) {
+    $('ganttContent').innerHTML = '<p style="color:var(--grey-mid);font-size:.84rem;text-align:center;padding:20px;">Aucun chantier actif à afficher.</p>';
+    return;
+  }
+
+  // Calculer durée relative pour chaque chantier
+  const now    = new Date();
+  const mois   = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  const headers = [];
+  for (let i = -1; i < 7; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    headers.push(mois[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2));
+  }
+
+  const totalDays = 240; // 8 mois affichés
+  const startRef  = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+  const rows = actifs.map(c => {
+    const debut  = c.date_debut    ? new Date(c.date_debut)    : new Date();
+    const fin    = c.date_fin_prevue ? new Date(c.date_fin_prevue) : new Date(debut.getTime() + 90*86400000);
+    const left   = Math.max(0, Math.round((debut - startRef) / 86400000));
+    const width  = Math.max(2, Math.round((fin - debut) / 86400000));
+    const leftPct  = Math.min(95, (left  / totalDays) * 100);
+    const widthPct = Math.min(100 - leftPct, (width / totalDays) * 100);
+    const barClass = c.statut==='retard' ? 'red' : c.statut==='planifie' ? 'blue' : 'green';
+
+    return `<div class="gantt-row">
+      <div class="gantt-label" title="${c.nom}">${c.reference} — ${c.nom}</div>
+      <div class="gantt-track">
+        <div class="gantt-bar ${barClass}" style="left:${leftPct.toFixed(1)}%;width:${Math.max(widthPct,3).toFixed(1)}%;">
+          ${c.avancement}%
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  $('ganttContent').innerHTML = `
+    <div class="gantt-container">
+      <div class="gantt-header">${headers.map(h=>`<div class="gantt-month">${h}</div>`).join('')}</div>
+      ${rows}
+    </div>`;
+}
+
+// FILTRES
+function filtrer() { chargerChantiers(); }
+function resetFiltres() { $('searchInput').value=''; $('filtreStatut').value=''; $('filtreService').value=''; chargerChantiers(); }
+
+// MODAL
+function openModal(ch) {
+  $('editId').value      = ch ? ch.id : '';
+  $('modalTitle').textContent = ch ? 'Modifier le Chantier' : 'Nouveau Chantier';
+  $('fRef').value        = ch?.reference || '';
+  $('fNom').value        = ch?.nom || '';
+  $('fClientId').value   = ch?.client_id || '';
+  $('fService').value    = ch?.type_service || '';
+  $('fLieu').value       = ch?.lieu || '';
+  $('fChef').value       = ch?.chef_chantier || '';
+  $('fDebut').value      = ch?.date_debut || '';
+  $('fFin').value        = ch?.date_fin_prevue || '';
+  $('fBudget').value     = ch?.budget || '';
+  $('fStatut').value     = ch?.statut || 'planifie';
+  $('fNotes').value      = ch?.notes || '';
+  $('avancementGroup').style.display = ch ? 'block' : 'none';
+  if (ch) {
+    $('fAvancement').value = ch.avancement || 0;
+    $('avancementDisplay').textContent = (ch.avancement||0)+'%';
+    $('fDepense').value    = ch.depense || '';
+    $('fFinReelle').value  = ch.date_fin_reelle || '';
+  }
+  $('modalOverlay').classList.add('open');
+}
+function closeModal() { $('modalOverlay').classList.remove('open'); }
+
+async function sauvegarder() {
+  const id   = $('editId').value;
+  const body = {
+    nom:          $('fNom').value.trim(),
+    client_id:    $('fClientId').value || null,
+    type_service: $('fService').value,
+    lieu:         $('fLieu').value.trim(),
+    chef_chantier:$('fChef').value.trim(),
+    date_debut:   $('fDebut').value || null,
+    date_fin_prevue:$('fFin').value || null,
+    budget:       $('fBudget').value || 0,
+    statut:       $('fStatut').value,
+    notes:        $('fNotes').value.trim(),
+  };
+  if (id) {
+    body.avancement    = $('fAvancement').value;
+    body.depense       = $('fDepense').value || 0;
+    body.date_fin_reelle = $('fFinReelle').value || null;
+  }
+  if (!body.nom) { showToast('warning','Champ requis','Le nom du chantier est obligatoire.'); return; }
+
+  try {
+    const url    = id ? `/api/chantiers/${id}` : '/api/chantiers';
+    const method = id ? 'PUT' : 'POST';
+    const res    = await fetch(url, {method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    const data   = await res.json();
+    if (data.ok) {
+      showToast('success', id ? 'Chantier modifié' : 'Chantier créé', body.nom + (data.reference ? ` — ${data.reference}` : ''));
+      closeModal(); closeDetail();
+      await chargerChantiers(); await chargerKPIs();
+    } else {
+      showToast('error','Erreur', data.error||'Impossible de sauvegarder.');
+    }
+  } catch { showToast('error','Erreur','Problème de connexion.'); }
+}
+
+// DETAIL
+async function ouvrirDetail(id) {
+  $('detailRef').textContent = 'Chargement...';
+  $('detailBody').innerHTML  = '<div class="loading-state"><div class="spinner"></div></div>';
+  $('detailFooter').innerHTML= '';
+  $('detailOverlay').classList.add('open');
+  $('detailPanel').classList.add('open');
+
+  const res  = await fetch(`/api/chantiers/${id}`);
+  const data = await res.json();
+  if (!data.ok) { showToast('error','Erreur','Impossible de charger la fiche.'); return; }
+
+  const c = data.chantier;
+  $('detailRef').textContent = c.reference;
+
+  const budgetPct = c.budget > 0 ? Math.min(100, Math.round((c.depense/c.budget)*100)) : 0;
+
+  $('detailBody').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+      <div>
+        <div style="font-size:1rem;font-weight:700;color:var(--white);">${c.nom}</div>
+        <div style="font-size:.8rem;color:var(--grey-mid);margin-top:3px;">${c.type_service||'—'} · ${c.lieu||'—'}</div>
+      </div>
+      ${badge(c.statut)}
+    </div>
+
+    <!-- Avancement global -->
+    <div style="background:var(--navy-light);border-radius:var(--r);padding:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-family:var(--font-c);font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-mid);">Avancement global</span>
+        <span style="font-family:var(--font-d);font-size:1.8rem;color:var(--amber);">${c.avancement}%</span>
+      </div>
+      <div class="progress-bar" style="height:10px;">
+        <div class="progress-fill ${progressColor(c.avancement,c.statut)}" style="width:${c.avancement}%"></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Informations chantier</div>
+      <dl>
+        <div class="detail-row"><dt>Client</dt><dd>${c.client_nom||'—'}</dd></div>
+        <div class="detail-row"><dt>Chef de chantier</dt><dd><strong>${c.chef_chantier||'—'}</strong></dd></div>
+        <div class="detail-row"><dt>Date début</dt><dd>${formatDate(c.date_debut)}</dd></div>
+        <div class="detail-row"><dt>Livraison prévue</dt><dd>${formatDate(c.date_fin_prevue)}</dd></div>
+        ${c.date_fin_reelle ? `<div class="detail-row"><dt>Livraison réelle</dt><dd>${formatDate(c.date_fin_reelle)}</dd></div>` : ''}
+      </dl>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title">Budget</div>
+      <dl>
+        <div class="detail-row"><dt>Budget total</dt><dd><strong>${parseFloat(c.budget||0).toLocaleString('fr-FR')} FCFA</strong></dd></div>
+        <div class="detail-row"><dt>Dépensé</dt><dd>${parseFloat(c.depense||0).toLocaleString('fr-FR')} FCFA</dd></div>
+        <div class="detail-row"><dt>Restant</dt><dd style="color:${budgetPct>90?'var(--red)':'var(--green)'};">${parseFloat((c.budget||0)-(c.depense||0)).toLocaleString('fr-FR')} FCFA</dd></div>
+      </dl>
+      <div class="progress-label"><span>Consommation budget</span><span>${budgetPct}%</span></div>
+      <div class="progress-bar"><div class="progress-fill ${budgetPct>90?'red':budgetPct>70?'amber':'green'}" style="width:${budgetPct}%"></div></div>
+    </div>
+
+    ${c.notes ? `<div class="detail-section"><div class="detail-section-title">Notes</div><p style="font-size:.83rem;color:var(--grey-light);line-height:1.7;background:var(--navy-light);padding:12px;border-radius:var(--r);border:1px solid rgba(255,255,255,.06);">${c.notes}</p></div>` : ''}
+  `;
+
+  $('detailFooter').innerHTML = `
+    <button class="btn btn-sm btn-amber" onclick="ouvrirModif(${c.id})">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Modifier
+    </button>
+    <button class="btn btn-sm btn-ghost" onclick="imprimerRapport(${c.id})">Rapport PDF</button>
+    <button class="btn btn-sm btn-danger" onclick="supprimer(${c.id},'${c.nom}')">Supprimer</button>
+  `;
+
+  window._chantierCourant = c;
+}
+
+function ouvrirModif(id) {
+  if (window._chantierCourant && window._chantierCourant.id===id) openModal(window._chantierCourant);
+}
+
+function closeDetail() {
+  $('detailOverlay').classList.remove('open');
+  $('detailPanel').classList.remove('open');
+  window._chantierCourant = null;
+}
+
+async function supprimer(id, nom) {
+  if (!confirm(`Supprimer le chantier "${nom}" ?`)) return;
+  const res  = await fetch(`/api/chantiers/${id}`,{method:'DELETE'});
+  const data = await res.json();
+  if (data.ok) {
+    showToast('success','Supprimé',nom+' a été supprimé.');
+    closeDetail(); await chargerChantiers(); await chargerKPIs();
+  }
+}
+
+async function imprimerRapport(id) {
+  const res  = await fetch(`/api/chantiers/${id}`);
+  const data = await res.json();
+  if (!data.ok) return;
+  const c = data.chantier;
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Rapport ${c.reference}</title>
+  <style>body{font-family:Arial,sans-serif;font-size:13px;color:#222;padding:40px 50px;max-width:800px;margin:0 auto;}
+  h1{font-size:22px;font-weight:900;letter-spacing:2px;color:#0b1220;border-bottom:3px solid #f5a623;padding-bottom:12px;margin-bottom:24px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+  .field{margin-bottom:10px;}.field .l{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:1px;}
+  .field .v{font-size:14px;font-weight:600;color:#222;}
+  .progress-wrap{margin:20px 0;}.progress-bg{height:14px;background:#eee;border-radius:7px;overflow:hidden;}
+  .progress-fill{height:100%;background:#f5a623;border-radius:7px;}
+  .footer{margin-top:40px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center;}
+  @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact;}}
+  </style></head><body>
+  <h1>RAPPORT DE CHANTIER — ${c.reference}</h1>
+  <div class="grid">
+    <div>
+      <div class="field"><div class="l">Chantier</div><div class="v">${c.nom}</div></div>
+      <div class="field"><div class="l">Client</div><div class="v">${c.client_nom||'—'}</div></div>
+      <div class="field"><div class="l">Type</div><div class="v">${c.type_service||'—'}</div></div>
+      <div class="field"><div class="l">Lieu</div><div class="v">${c.lieu||'—'}</div></div>
+    </div>
+    <div>
+      <div class="field"><div class="l">Chef de chantier</div><div class="v">${c.chef_chantier||'—'}</div></div>
+      <div class="field"><div class="l">Date début</div><div class="v">${formatDate(c.date_debut)}</div></div>
+      <div class="field"><div class="l">Livraison prévue</div><div class="v">${formatDate(c.date_fin_prevue)}</div></div>
+      <div class="field"><div class="l">Statut</div><div class="v">${c.statut}</div></div>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span>Avancement global</span><span style="font-weight:700;color:#f5a623;">${c.avancement}%</span></div>
+    <div class="progress-bg"><div class="progress-fill" style="width:${c.avancement}%"></div></div>
+  </div>
+  <div class="grid">
+    <div class="field"><div class="l">Budget total</div><div class="v">${parseFloat(c.budget||0).toLocaleString('fr-FR')} FCFA</div></div>
+    <div class="field"><div class="l">Dépenses à ce jour</div><div class="v">${parseFloat(c.depense||0).toLocaleString('fr-FR')} FCFA</div></div>
+  </div>
+  ${c.notes ? `<div class="field"><div class="l">Notes</div><div class="v" style="font-weight:400;line-height:1.6;">${c.notes}</div></div>` : ''}
+  <div class="footer">Espoir Construction — Rapport généré le ${new Date().toLocaleDateString('fr-FR')} · ${c.reference}</div>
+  <script>window.onload=()=>window.print();<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+(async()=>{
+  await checkAuth();
+  await chargerClients();
+  await Promise.all([chargerChantiers(), chargerKPIs()]);
+})();
+</script>
+</body>
+</html>

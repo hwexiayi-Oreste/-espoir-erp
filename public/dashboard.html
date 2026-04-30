@@ -56,7 +56,7 @@
       </button>
 
       <p class="nav-section">Opérations</p>
-      <button class="nav-item" onclick="navTo(this,'chantiers')">
+      <button class="nav-item" onclick="location.href='/chantiers'">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
         Chantiers
         <span class="nav-badge red" id="navBadgeChantiers">—</span>
@@ -423,7 +423,7 @@ async function renderDashboard() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
             Chantiers Actifs
           </div>
-          <button class="btn btn-sm btn-ghost" style="font-size:.66rem;padding:5px 10px;" onclick="showToast('info','Module Chantiers','Disponible dans la prochaine version.')">Voir tout →</button>
+          <button class="btn btn-sm btn-ghost" style="font-size:.66rem;padding:5px 10px;" onclick="location.href='/chantiers'">Voir tout →</button>
         </div>
         <div class="card-body" style="padding-top:4px;">
           ${chantiers.slice(0,5).map(c => `
