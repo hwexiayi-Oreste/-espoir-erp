@@ -65,7 +65,7 @@ app.get('/chantiers', (req, res) => {
   if (!req.session || !req.session.user) return res.redirect('/login');
   res.sendFile(path.join(__dirname, 'public', 'chantiers.html'));
 });
-app.get('/', (req, res) => res.redirect('/login'));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 app.listen(PORT, '0.0.0.0', () => {
   let ip = 'localhost';
