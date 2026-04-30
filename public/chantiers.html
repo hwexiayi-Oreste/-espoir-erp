@@ -595,6 +595,8 @@ async function ouvrirDetail(id) {
   if (!data.ok) { showToast('error','Erreur','Impossible de charger la fiche.'); return; }
 
   const c = data.chantier;
+  const phases = data.phases || [];
+  const phases = data.phases || [];
   $('detailRef').textContent = c.reference;
 
   const budgetPct = c.budget > 0 ? Math.min(100, Math.round((c.depense/c.budget)*100)) : 0;
@@ -641,6 +643,30 @@ async function ouvrirDetail(id) {
       <div class="progress-bar"><div class="progress-fill ${budgetPct>90?'red':budgetPct>70?'amber':'green'}" style="width:${budgetPct}%"></div></div>
     </div>
 
+
+    <!-- PHASES DE TRAVAUX -->
+    <div class="detail-section">
+      <div class="detail-section-title">Phases de travaux (${phases.length})</div>
+      ${phases.length ? phases.map(p => `
+        <div style="margin-bottom:14px;background:var(--navy-light);border-radius:var(--r);padding:12px 14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:.84rem;font-weight:600;color:var(--white);">${p.ordre}. ${p.nom}</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-family:var(--font-d);font-size:1.2rem;color:var(--amber);">${p.avancement}%</span>
+              <span class="badge ${p.statut==='termine'?'badge-green':p.statut==='en_cours'?'badge-amber':'badge-grey'}">${p.statut==='termine'?'Terminé ✓':p.statut==='en_cours'?'En cours':'En attente'}</span>
+            </div>
+          </div>
+          <div class="progress-bar" style="height:6px;margin-bottom:8px;">
+            <div class="progress-fill ${p.avancement>=100?'green':p.avancement>0?'amber':'blue'}" style="width:${p.avancement}%"></div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-sm btn-ghost" style="font-size:.62rem;padding:3px 8px;" onclick="mettreAjourPhase(${c.id},${p.id},'en_cours',50)">▶ En cours 50%</button>
+            <button class="btn btn-sm btn-ghost" style="font-size:.62rem;padding:3px 8px;" onclick="mettreAjourPhase(${c.id},${p.id},'en_cours',75)">▶ 75%</button>
+            <button class="btn btn-sm btn-amber" style="font-size:.62rem;padding:3px 8px;" onclick="mettreAjourPhase(${c.id},${p.id},'termine',100)">✓ Terminer</button>
+          </div>
+        </div>`).join('') : '<p style="color:var(--grey-mid);font-size:.84rem;">Aucune phase — créez un nouveau chantier pour générer les phases automatiquement.</p>'}
+    </div>
+
     ${c.notes ? `<div class="detail-section"><div class="detail-section-title">Notes</div><p style="font-size:.83rem;color:var(--grey-light);line-height:1.7;background:var(--navy-light);padding:12px;border-radius:var(--r);border:1px solid rgba(255,255,255,.06);">${c.notes}</p></div>` : ''}
   `;
 
@@ -681,6 +707,7 @@ async function imprimerRapport(id) {
   const data = await res.json();
   if (!data.ok) return;
   const c = data.chantier;
+  const phases = data.phases || [];
   const win = window.open('','_blank');
   win.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Rapport ${c.reference}</title>
   <style>body{font-family:Arial,sans-serif;font-size:13px;color:#222;padding:40px 50px;max-width:800px;margin:0 auto;}
@@ -721,6 +748,50 @@ async function imprimerRapport(id) {
   <script>window.onload=()=>window.print();<\/script>
   </body></html>`);
   win.document.close();
+}
+
+async function mettreAjourPhase(chantierId, phaseId, statut, avancement) {
+  try {
+    const res = await fetch(`/api/chantiers/${chantierId}/phase/${phaseId}`, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ avancement, statut })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('success', 'Phase mise à jour', statut === 'termine' ? 'Phase terminée ✓' : `Avancement : ${avancement}%`);
+      await ouvrirDetail(chantierId);
+      await chargerChantiers();
+      await chargerKPIs();
+    }
+  } catch { showToast('error','Erreur','Impossible de mettre à jour la phase.'); }
+}
+
+
+// Mise à jour visuelle d'une phase
+function majPhase(id, val, input) {
+  const wrap = input.closest('div[style]');
+  if (!wrap) return;
+  const pct = wrap.querySelector('.progress-fill');
+  const lbl = wrap.querySelector('.progress-label span:last-child');
+  const badge = wrap.querySelector('.badge');
+  if (pct) { pct.style.width = val + '%'; pct.className = 'progress-fill ' + (val>=100?'green':val>0?'amber':'blue'); }
+  if (lbl) lbl.textContent = val + '%';
+  if (badge) {
+    badge.textContent = val>=100 ? 'Terminé' : val>0 ? 'En cours' : 'À faire';
+    badge.className = 'badge ' + (val>=100?'badge-green':val>0?'badge-amber':'badge-grey');
+  }
+}
+
+// Sauvegarder l'avancement d'une phase
+async function sauvegarderPhase(phaseId, val) {
+  try {
+    await fetch('/api/chantiers/phase/' + phaseId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ avancement: parseInt(val) })
+    });
+  } catch(e) { console.error('Erreur sauvegarde phase', e); }
 }
 
 (async()=>{

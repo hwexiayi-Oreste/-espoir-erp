@@ -113,6 +113,22 @@ async function initDB() {
         lien_type TEXT, lien_id INTEGER,
         lu INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT NOW()
       )`,
+      `CREATE TABLE IF NOT EXISTS espoir_chantier_phases (
+        id SERIAL PRIMARY KEY,
+        chantier_id INTEGER REFERENCES espoir_chantiers(id) ON DELETE CASCADE,
+        nom TEXT NOT NULL, ordre INTEGER DEFAULT 1,
+        avancement INTEGER DEFAULT 0, statut TEXT DEFAULT 'en_attente',
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
+      `CREATE TABLE IF NOT EXISTS espoir_chantier_phases (
+        id SERIAL PRIMARY KEY,
+        chantier_id INTEGER REFERENCES espoir_chantiers(id) ON DELETE CASCADE,
+        nom TEXT NOT NULL,
+        avancement INTEGER DEFAULT 0,
+        statut TEXT DEFAULT 'a_faire',
+        ordre INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT NOW()
+      )`,
       `CREATE TABLE IF NOT EXISTS espoir_activite (
         id SERIAL PRIMARY KEY, user_id INTEGER, action TEXT, detail TEXT,
         created_at TIMESTAMP DEFAULT NOW()
@@ -158,6 +174,22 @@ async function initDB() {
         id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, titre TEXT,
         message TEXT, lien_type TEXT, lien_id INTEGER,
         lu INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS espoir_chantier_phases (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chantier_id INTEGER,
+        nom TEXT NOT NULL, ordre INTEGER DEFAULT 1,
+        avancement INTEGER DEFAULT 0, statut TEXT DEFAULT 'en_attente',
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS espoir_chantier_phases (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        chantier_id INTEGER REFERENCES espoir_chantiers(id) ON DELETE CASCADE,
+        nom TEXT NOT NULL,
+        avancement INTEGER DEFAULT 0,
+        statut TEXT DEFAULT 'a_faire',
+        ordre INTEGER DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now'))
       );
       CREATE TABLE IF NOT EXISTS espoir_activite (
         id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER,
