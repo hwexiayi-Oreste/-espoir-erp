@@ -138,7 +138,7 @@ input, select, textarea { font-family: var(--font-b); }
   color: var(--amber);
 }
 
-.sidebar-nav { padding: 14px 10px; flex: 1; }
+.sidebar-nav { padding: 14px 10px; flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; }
 .nav-section {
   font-family: var(--font-c);
   font-size: .58rem;
