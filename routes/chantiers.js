@@ -8,13 +8,13 @@ router.get('/stats', requireAuth, async (req, res) => {
   await ready;
   try {
     const stats = {
-      total:    (await db.getAsync("SELECT COUNT(*) as n FROM chantiers")).n,
-      en_cours: (await db.getAsync("SELECT COUNT(*) as n FROM chantiers WHERE statut='en_cours'")).n,
-      retard:   (await db.getAsync("SELECT COUNT(*) as n FROM chantiers WHERE statut='retard'")).n,
-      planifie: (await db.getAsync("SELECT COUNT(*) as n FROM chantiers WHERE statut='planifie'")).n,
-      livre:    (await db.getAsync("SELECT COUNT(*) as n FROM chantiers WHERE statut='livre'")).n,
-      budget_total:  (await db.getAsync("SELECT COALESCE(SUM(budget),0) as t FROM chantiers WHERE statut IN ('en_cours','retard')")).t,
-      depense_total: (await db.getAsync("SELECT COALESCE(SUM(depense),0) as t FROM chantiers WHERE statut IN ('en_cours','retard')")).t,
+      total:    (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers")).n,
+      en_cours: (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='en_cours'")).n,
+      retard:   (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='retard'")).n,
+      planifie: (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='planifie'")).n,
+      livre:    (await db.getAsync("SELECT COUNT(*) as n FROM espoir_chantiers WHERE statut='livre'")).n,
+      budget_total:  (await db.getAsync("SELECT COALESCE(SUM(budget),0) as t FROM espoir_chantiers WHERE statut IN ('en_cours','retard')")).t,
+      depense_total: (await db.getAsync("SELECT COALESCE(SUM(depense),0) as t FROM espoir_chantiers WHERE statut IN ('en_cours','retard')")).t,
     };
     res.json({ ok: true, stats });
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -27,7 +27,7 @@ router.get('/', requireAuth, async (req, res) => {
     const { statut, q } = req.query;
     let sql = `
       SELECT ch.*, c.nom as client_nom
-      FROM chantiers ch
+      FROM espoir_chantiers ch
       LEFT JOIN clients c ON ch.client_id = c.id
       WHERE 1=1
     `;
@@ -46,7 +46,7 @@ router.get('/:id', requireAuth, async (req, res) => {
   try {
     const chantier = await db.getAsync(`
       SELECT ch.*, c.nom as client_nom, c.telephone as client_tel, c.email as client_email
-      FROM chantiers ch
+      FROM espoir_chantiers ch
       LEFT JOIN clients c ON ch.client_id = c.id
       WHERE ch.id = ?
     `, [req.params.id]);
@@ -63,7 +63,7 @@ router.post('/', requireAuth, async (req, res) => {
     if (!nom) return res.status(400).json({ error: 'Le nom du chantier est requis.' });
 
     // Générer référence automatique
-    const last = await db.getAsync("SELECT reference FROM chantiers ORDER BY id DESC LIMIT 1");
+    const last = await db.getAsync("SELECT reference FROM espoir_chantiers ORDER BY id DESC LIMIT 1");
     let nextNum = 33;
     if (last && last.reference) {
       const n = parseInt(last.reference.replace('CH-',''));
@@ -72,11 +72,11 @@ router.post('/', requireAuth, async (req, res) => {
     const reference = `CH-${String(nextNum).padStart(3,'0')}`;
 
     const result = await db.runAsync(`
-      INSERT INTO chantiers (reference, nom, client_id, type_service, lieu, chef_chantier, date_debut, date_fin_prevue, budget, depense, avancement, statut, notes)
+      INSERT INTO espoir_chantiers (reference, nom, client_id, type_service, lieu, chef_chantier, date_debut, date_fin_prevue, budget, depense, avancement, statut, notes)
       VALUES (?,?,?,?,?,?,?,?,?,0,0,?,?)
     `, [reference, nom, client_id||null, type_service||'', lieu||'', chef_chantier||'', date_debut||null, date_fin_prevue||null, parseFloat(budget)||0, statut||'planifie', notes||'']);
 
-    await db.runAsync('INSERT INTO activite (user_id, action, detail) VALUES (?,?,?)',
+    await db.runAsync('INSERT INTO espoir_activite (user_id, action, detail) VALUES (?,?,?)',
       [req.session.user.id, 'Chantier créé', `${reference} - ${nom}`]);
 
     res.json({ ok: true, id: result.lastID, reference });
@@ -91,7 +91,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     if (!nom) return res.status(400).json({ error: 'Le nom est requis.' });
 
     await db.runAsync(`
-      UPDATE chantiers SET
+      UPDATE espoir_chantiers SET
         nom=?, client_id=?, type_service=?, lieu=?, chef_chantier=?,
         date_debut=?, date_fin_prevue=?, date_fin_reelle=?,
         budget=?, depense=?, avancement=?, statut=?, notes=?
@@ -101,7 +101,7 @@ router.put('/:id', requireAuth, async (req, res) => {
         parseFloat(budget)||0, parseFloat(depense)||0, parseInt(avancement)||0,
         statut||'planifie', notes||'', req.params.id]);
 
-    await db.runAsync('INSERT INTO activite (user_id, action, detail) VALUES (?,?,?)',
+    await db.runAsync('INSERT INTO espoir_activite (user_id, action, detail) VALUES (?,?,?)',
       [req.session.user.id, 'Chantier modifié', nom]);
 
     res.json({ ok: true });
@@ -114,7 +114,7 @@ router.patch('/:id/avancement', requireAuth, async (req, res) => {
   try {
     const { avancement, statut } = req.body;
     await db.runAsync(
-      'UPDATE chantiers SET avancement=?, statut=? WHERE id=?',
+      'UPDATE espoir_chantiers SET avancement=?, statut=? WHERE id=?',
       [parseInt(avancement)||0, statut||'en_cours', req.params.id]
     );
     res.json({ ok: true });
@@ -125,9 +125,9 @@ router.patch('/:id/avancement', requireAuth, async (req, res) => {
 router.delete('/:id', requireAuth, async (req, res) => {
   await ready;
   try {
-    const ch = await db.getAsync('SELECT nom FROM chantiers WHERE id=?', [req.params.id]);
-    await db.runAsync('DELETE FROM chantiers WHERE id=?', [req.params.id]);
-    await db.runAsync('INSERT INTO activite (user_id, action, detail) VALUES (?,?,?)',
+    const ch = await db.getAsync('SELECT nom FROM espoir_chantiers WHERE id=?', [req.params.id]);
+    await db.runAsync('DELETE FROM espoir_chantiers WHERE id=?', [req.params.id]);
+    await db.runAsync('INSERT INTO espoir_activite (user_id, action, detail) VALUES (?,?,?)',
       [req.session.user.id, 'Chantier supprimé', ch?.nom||'']);
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }

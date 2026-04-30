@@ -10,7 +10,7 @@ router.get('/', requireAuth, async (req, res) => {
     const { statut, service, q } = req.query;
     let sql = `
       SELECT d.*, c.nom as client_nom, c.ville as client_ville
-      FROM devis d LEFT JOIN clients c ON d.client_id = c.id
+      FROM espoir_devis d LEFT JOIN clients c ON d.client_id = c.id
       WHERE 1=1
     `;
     const params = [];
@@ -33,11 +33,11 @@ router.get('/:id', requireAuth, async (req, res) => {
       SELECT d.*, c.nom as client_nom, c.email as client_email,
              c.telephone as client_tel, c.ville as client_ville,
              c.contact_nom, c.contact_poste
-      FROM devis d LEFT JOIN clients c ON d.client_id = c.id
+      FROM espoir_devis d LEFT JOIN clients c ON d.client_id = c.id
       WHERE d.id = ?
     `, [req.params.id]);
     if (!devis) return res.status(404).json({ error: 'Devis introuvable.' });
-    const lignes = await db.allAsync('SELECT * FROM devis_lignes WHERE devis_id = ? ORDER BY id', [req.params.id]);
+    const lignes = await db.allAsync('SELECT * FROM espoir_devis_lignes WHERE devis_id = ? ORDER BY id', [req.params.id]);
     res.json({ ok: true, devis, lignes });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -52,7 +52,7 @@ router.post('/', requireAuth, async (req, res) => {
     if (!client_id || !service) return res.status(400).json({ error: 'Client et service requis.' });
 
     // Générer référence automatique
-    const last = await db.getAsync("SELECT reference FROM devis ORDER BY id DESC LIMIT 1");
+    const last = await db.getAsync("SELECT reference FROM espoir_devis ORDER BY id DESC LIMIT 1");
     let nextNum = 1;
     if (last) {
       const parts = last.reference.split('-');
@@ -72,7 +72,7 @@ router.post('/', requireAuth, async (req, res) => {
     const montant_ttc = montant_ht * (1 + tva / 100);
 
     const result = await db.runAsync(`
-      INSERT INTO devis (reference, client_id, service, montant_ht, tva, montant_ttc,
+      INSERT INTO espoir_devis (reference, client_id, service, montant_ht, tva, montant_ttc,
         statut, date_emission, date_validite, chef_projet, description, created_by)
       VALUES (?, ?, ?, ?, ?, ?, 'brouillon', date('now'), ?, ?, ?, ?)
     `, [reference, client_id, service, montant_ht, tva, montant_ttc,
@@ -80,12 +80,12 @@ router.post('/', requireAuth, async (req, res) => {
 
     for (const l of lignesData) {
       await db.runAsync(`
-        INSERT INTO devis_lignes (devis_id, designation, unite, quantite, prix_unitaire, total)
+        INSERT INTO espoir_devis_lignes (devis_id, designation, unite, quantite, prix_unitaire, total)
         VALUES (?, ?, ?, ?, ?, ?)
       `, [result.lastID, l.designation, l.unite || '', l.quantite || 1, l.prix_unitaire || 0, l.total]);
     }
 
-    await db.runAsync('INSERT INTO activite (user_id,action,detail) VALUES (?,?,?)',
+    await db.runAsync('INSERT INTO espoir_activite (user_id,action,detail) VALUES (?,?,?)',
       [req.session.user.id, 'Devis cree', `${reference} - ${service}`]);
 
     res.json({ ok: true, id: result.lastID, reference });
@@ -101,9 +101,9 @@ router.patch('/:id/statut', requireAuth, async (req, res) => {
     const { statut } = req.body;
     const statuts = ['brouillon','en_attente','envoye','accepte','refuse','expire'];
     if (!statuts.includes(statut)) return res.status(400).json({ error: 'Statut invalide.' });
-    await db.runAsync('UPDATE devis SET statut = ? WHERE id = ?', [statut, req.params.id]);
-    const d = await db.getAsync('SELECT reference FROM devis WHERE id = ?', [req.params.id]);
-    await db.runAsync('INSERT INTO activite (user_id,action,detail) VALUES (?,?,?)',
+    await db.runAsync('UPDATE espoir_devis SET statut = ? WHERE id = ?', [statut, req.params.id]);
+    const d = await db.getAsync('SELECT reference FROM espoir_devis WHERE id = ?', [req.params.id]);
+    await db.runAsync('INSERT INTO espoir_activite (user_id,action,detail) VALUES (?,?,?)',
       [req.session.user.id, 'Statut devis modifie', `${d.reference} → ${statut}`]);
     res.json({ ok: true });
   } catch (err) {
@@ -115,8 +115,8 @@ router.patch('/:id/statut', requireAuth, async (req, res) => {
 router.delete('/:id', requireAuth, async (req, res) => {
   await ready;
   try {
-    await db.runAsync('DELETE FROM devis_lignes WHERE devis_id = ?', [req.params.id]);
-    await db.runAsync('DELETE FROM devis WHERE id = ?', [req.params.id]);
+    await db.runAsync('DELETE FROM espoir_devis_lignes WHERE devis_id = ?', [req.params.id]);
+    await db.runAsync('DELETE FROM espoir_devis WHERE id = ?', [req.params.id]);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -128,13 +128,13 @@ router.get('/stats/resume', requireAuth, async (req, res) => {
   await ready;
   try {
     const stats = {
-      total:          (await db.getAsync("SELECT COUNT(*) as n FROM devis")).n,
-      en_attente:     (await db.getAsync("SELECT COUNT(*) as n FROM devis WHERE statut IN ('en_attente','envoye','expire_bientot')")).n,
-      acceptes:       (await db.getAsync("SELECT COUNT(*) as n FROM devis WHERE statut = 'accepte'")).n,
-      pipeline:       (await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as t FROM devis WHERE statut IN ('en_attente','envoye','expire_bientot')")).t,
-      ca_accepte:     (await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as t FROM devis WHERE statut = 'accepte'")).t,
-      taux_conversion:(await db.getAsync("SELECT COUNT(*) as n FROM devis WHERE statut IN ('accepte','refuse')")).n,
-      nb_acceptes_calc:(await db.getAsync("SELECT COUNT(*) as n FROM devis WHERE statut = 'accepte'")).n,
+      total:          (await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis")).n,
+      en_attente:     (await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut IN ('en_attente','envoye','expire_bientot')")).n,
+      acceptes:       (await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut = 'accepte'")).n,
+      pipeline:       (await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as t FROM espoir_devis WHERE statut IN ('en_attente','envoye','expire_bientot')")).t,
+      ca_accepte:     (await db.getAsync("SELECT COALESCE(SUM(montant_ht),0) as t FROM espoir_devis WHERE statut = 'accepte'")).t,
+      taux_conversion:(await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut IN ('accepte','refuse')")).n,
+      nb_acceptes_calc:(await db.getAsync("SELECT COUNT(*) as n FROM espoir_devis WHERE statut = 'accepte'")).n,
     };
     if (stats.taux_conversion > 0)
       stats.taux = Math.round((stats.nb_acceptes_calc / stats.taux_conversion) * 100);
