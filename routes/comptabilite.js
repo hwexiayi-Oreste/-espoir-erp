@@ -166,4 +166,41 @@ router.get('/devis-acceptes', requireAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+
+// GET /api/comptabilite/seed — insérer données de démo (admin seulement)
+router.get('/seed', requireAuth, async (req, res) => {
+  await ready;
+  try {
+    if (req.session.user.role !== 'admin') return res.status(403).json({ error: 'Accès refusé.' });
+    
+    const existing = await db.getAsync('SELECT COUNT(*) as n FROM espoir_factures');
+    if (parseInt(existing?.n || 0) > 0) return res.json({ ok: true, message: 'Données déjà présentes.' });
+
+    const factures = [
+      ['FAC-001-2025',1,null,52000000,18,9360000,61360000,'payee','2025-04-25','2025-05-25','Facture finale hangar Bohicon'],
+      ['FAC-002-2025',3,null,14200000,18,2556000,16756000,'payee','2025-04-20','2025-05-20','Groupes électrogènes BeninElec'],
+      ['FAC-003-2025',2,null,38500000,18,6930000,45430000,'envoyee','2025-05-01','2025-06-01','Transport matériaux LogiTrans'],
+      ['FAC-004-2025',4,null,74000000,18,13320000,87320000,'en_retard','2025-04-10','2025-05-10','Portiques portuaires PortCargo'],
+    ];
+    for (const f of factures) {
+      const r = await db.runAsync(
+        'INSERT INTO espoir_factures (reference,client_id,devis_id,montant_ht,tva,montant_tva,montant_ttc,statut,date_emission,date_echeance,notes) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+        f
+      );
+      // Ajouter une ligne par facture
+      await db.runAsync(
+        'INSERT INTO espoir_facture_lignes (facture_id,designation,unite,quantite,prix_unitaire,total) VALUES (?,?,?,?,?,?)',
+        [r.lastID, 'Travaux selon devis', 'Forfait', 1, f[3], f[3]]
+      );
+    }
+    // Paiements
+    await db.runAsync('INSERT INTO espoir_paiements (facture_id,montant,mode_paiement,date_paiement,reference_paiement) VALUES (?,?,?,?,?)',
+      [1,61360000,'virement','2025-05-20','VIR-20250520-001']);
+    await db.runAsync('INSERT INTO espoir_paiements (facture_id,montant,mode_paiement,date_paiement,reference_paiement) VALUES (?,?,?,?,?)',
+      [2,16756000,'cheque','2025-05-15','CHQ-20250515-001']);
+
+    res.json({ ok: true, message: '4 factures de démo insérées.' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;
