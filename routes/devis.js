@@ -10,7 +10,7 @@ router.get('/', requireAuth, async (req, res) => {
     const { statut, service, q } = req.query;
     let sql = `
       SELECT d.*, c.nom as client_nom, c.ville as client_ville
-      FROM espoir_devis d LEFT JOIN clients c ON d.client_id = c.id
+      FROM espoir_devis d LEFT JOIN espoir_clients c ON d.client_id = c.id
       WHERE 1=1
     `;
     const params = [];
@@ -33,7 +33,7 @@ router.get('/:id', requireAuth, async (req, res) => {
       SELECT d.*, c.nom as client_nom, c.email as client_email,
              c.telephone as client_tel, c.ville as client_ville,
              c.contact_nom, c.contact_poste
-      FROM espoir_devis d LEFT JOIN clients c ON d.client_id = c.id
+      FROM espoir_devis d LEFT JOIN espoir_clients c ON d.client_id = c.id
       WHERE d.id = ?
     `, [req.params.id]);
     if (!devis) return res.status(404).json({ error: 'Devis introuvable.' });
