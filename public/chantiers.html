@@ -386,6 +386,7 @@ async function checkAuth() {
   const data = await res.json();
   if (!data.ok) { window.location.href='/login'; return; }
   currentUser = data.user;
+  window.currentUser = currentUser;
   const av=initials(data.user.prenom+' '+data.user.nom);
   const rl=roleLabel(data.user.role);
   const nm=data.user.prenom+' '+data.user.nom;
@@ -750,67 +751,35 @@ async function imprimerRapport(id) {
   </div>
   ${c.notes ? `<div class="field"><div class="l">Notes</div><div class="v" style="font-weight:400;line-height:1.6;">${c.notes}</div></div>` : ''}
   <div class="footer">Espoir Construction — Rapport généré le ${new Date().toLocaleDateString('fr-FR')} · ${c.reference}</div>
-  <scr"+"ipt>window.onload=()=>window.print();<\/scr"+"ipt>
-  
-<!-- MENU MOBILE -->
-<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
-<div class="mobile-drawer" id="mobileDrawer">
-  <div class="mobile-drawer-header">
-    <div class="mobile-drawer-logo">
-      <div style="width:34px;height:34px;background:var(--amber);border-radius:8px;display:flex;align-items:center;justify-content:center;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#0b1220" stroke-width="2.5" style="width:16px;height:16px;"><path d="M2 20L12 4L22 20"/><path d="M6 20L12 10L18 20"/></svg>
-      </div>
-      <div style="font-family:var(--font-d);font-size:.9rem;letter-spacing:.05em;color:var(--white);">ESPOIR ERP</div>
-    </div>
-    <button onclick="closeMobileMenu()" style="background:none;border:none;color:var(--grey-mid);cursor:pointer;font-size:1.4rem;padding:4px;line-height:1;">&#10005;</button>
-  </div>
-  <div class="mobile-drawer-user">
-    <div class="user-avatar" id="drawerAvatar" style="width:34px;height:34px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:.95rem;color:var(--navy);flex-shrink:0;">—</div>
-    <div>
-      <div id="drawerNom" style="font-size:.84rem;font-weight:600;color:var(--white);">—</div>
-      <div id="drawerRole" style="font-family:var(--font-c);font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);">—</div>
-    </div>
-  </div>
-  <nav class="mobile-drawer-nav" id="drawerNav"></nav>
-  <div class="mobile-drawer-bottom">
-    <button onclick="mobileLogout()" style="display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:var(--r);font-size:.86rem;color:var(--red);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.15);width:100%;cursor:pointer;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      Déconnexion
-    </button>
-  </div>
-</div>
-
-<script>
-function openMobileMenu(){document.getElementById('mobileOverlay').classList.add('open');document.getElementById('mobileDrawer').classList.add('open');}
-function closeMobileMenu(){document.getElementById('mobileOverlay').classList.remove('open');document.getElementById('mobileDrawer').classList.remove('open');}
-async function mobileLogout(){await fetch('/api/auth/logout',{method:'POST'});window.location.href='/login';}
-function fillMobileDrawer(user){
-  if(!user)return;
-  const av=(user.prenom||'?')[0].toUpperCase()+(user.nom||'?')[0].toUpperCase();
-  const rl={admin:'Administrateur',directeur:'Directeur Général',comptable:'Comptable',technicien:'Technicien',client:'Client'}[user.role]||user.role;
-  const a=document.getElementById('drawerAvatar');const n=document.getElementById('drawerNom');const r=document.getElementById('drawerRole');
-  if(a)a.textContent=av;if(n)n.textContent=user.prenom+' '+user.nom;if(r)r.textContent=rl;
-  const links=[
-    {href:'/dashboard',label:'Dashboard',roles:['admin','directeur','comptable','technicien']},
-    {href:'/devis',label:'Devis & Offres',roles:['admin','directeur','comptable']},
-    {href:'/clients',label:'Clients',roles:['admin','directeur']},
-    {href:'/chantiers',label:'Chantiers',roles:['admin','directeur','technicien']},
-    {href:'/transport',label:'Transport & Manutention',roles:['admin','directeur','technicien']},
-    {href:'/comptabilite',label:'Comptabilité',roles:['admin','directeur','comptable']},
-    {href:'/utilisateurs',label:'Utilisateurs',roles:['admin']},
-  ];
-  const cur=window.location.pathname;
-  const nav=document.getElementById('drawerNav');
-  if(!nav)return;
-  nav.innerHTML=links.filter(l=>l.roles.includes(user.role)).map(l=>`<a href="${l.href}" style="display:flex;align-items:center;padding:10px 12px;border-radius:var(--r);font-size:.86rem;color:${cur===l.href?'var(--amber)':'var(--grey-light)'};background:${cur===l.href?'rgba(245,166,35,.08)':'none'};text-decoration:none;margin-bottom:2px;">${l.label}</a>`).join('');
+  </body></html>`);
+  win.document.close();
+  setTimeout(function(){ win.print(); }, 500);
 }
-document.addEventListener('DOMContentLoaded',()=>{
-  const poll=setInterval(()=>{if(typeof currentUser!=='undefined'&&currentUser){fillMobileDrawer(currentUser);clearInterval(poll);}},100);
-  setTimeout(()=>clearInterval(poll),5000);
-});
+
+async function mettreAjourPhase(chantierId, phaseId, statut, avancement) {
+  try {
+    const res = await fetch(`/api/chantiers/${chantierId}/phase/${phaseId}`, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ avancement, statut })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      showToast('success', 'Phase mise à jour', statut === 'termine' ? 'Phase terminée ✓' : `Avancement : ${avancement}%`);
+      await ouvrirDetail(chantierId);
+      await chargerChantiers();
+      await chargerKPIs();
+    }
+  } catch (e) { showToast('error','Erreur','Impossible de mettre à jour la phase.'); }
+}
+
+(async () => {
+  await checkAuth();
+  await chargerClients();
+  await Promise.all([chargerChantiers(), chargerKPIs()]);
+})();
 </script>
 
+<script src="/js/mobile-menu.js"></script>
 </body>
-</html</script>
-
->
+</html>
