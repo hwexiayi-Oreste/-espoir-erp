@@ -143,6 +143,7 @@ async function checkAuth(){
   if(!data.ok){window.location.href='/login';return;}
   if(data.user.role!=='client'){window.location.href='/dashboard';return;}
   currentUser=data.user;
+  window.currentUser = currentUser;
   const av=initials(data.user.prenom+' '+data.user.nom);
   const nm=data.user.prenom+' '+data.user.nom;
   $('sideAvatar').textContent=av;$('sideNom').textContent=nm;

@@ -162,6 +162,7 @@ async function checkAuth(){
   const data=await res.json();
   if(!data.ok){window.location.href='/login';return;}
   currentUser=data.user;
+  window.currentUser = currentUser;
   if(currentUser.role==='client'){window.location.href='/espace-client';return;}
   const av=ini(currentUser.prenom,currentUser.nom);
   const nm=currentUser.prenom+' '+currentUser.nom;

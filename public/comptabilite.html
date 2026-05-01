@@ -306,6 +306,7 @@ async function checkAuth(){
   const res=await fetch('/api/auth/me');
   const data=await res.json();
   if(!data.ok){window.location.href='/login';return;}
+  window.currentUser = data.user;
   const av=initials(data.user.prenom+' '+data.user.nom);
   const rl=roleLabel(data.user.role);
   const nm=data.user.prenom+' '+data.user.nom;
