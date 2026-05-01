@@ -231,7 +231,15 @@ let currentUser = null;
 
 function initials(n){return(n||'??').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();}
 function roleLabel(r){return{admin:'Administrateur',directeur:'Directeur Général',comptable:'Comptable',technicien:'Technicien',client:'Client'}[r]||r;}
-function formatDate(d){if(!d)return'Jamais';const s=(d.split('T')[0]).split('-');return`${s[2]}/${s[1]}/${s[0]}`;}
+function formatDate(d) {
+  if (!d) return '—';
+  // Gérer ISO complet (2025-04-15T00:00:00.000Z) ou simple (2025-04-15)
+  const datePart = String(d).split('T')[0];
+  const parts = datePart.split('-');
+  if (parts.length !== 3) return d;
+  const [y, m, j] = parts;
+  return `${j}/${m}/${y}`;
+}/${s[1]}/${s[0]}`;}
 
 const ROLE_COLORS = {
   admin:'#1a2a3a', directeur:'#1a2035', comptable:'#0f2a1a',

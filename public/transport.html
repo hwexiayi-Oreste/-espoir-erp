@@ -326,7 +326,15 @@ let allChantiers = [];
 let currentTab   = 'flotte';
 let currentUser  = null;
 
-function formatDate(d) { if(!d)return'—'; const[y,m,j]=d.split('T')[0].split('-'); return`${j}/${m}/${y}`; }
+function formatDate(d) {
+  if (!d) return '—';
+  // Gérer ISO complet (2025-04-15T00:00:00.000Z) ou simple (2025-04-15)
+  const datePart = String(d).split('T')[0];
+  const parts = datePart.split('-');
+  if (parts.length !== 3) return d;
+  const [y, m, j] = parts;
+  return `${j}/${m}/${y}`;
+}/${m}/${y}`; }
 function initials(n) { return(n||'??').split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase(); }
 function roleLabel(r) { return{admin:'Administrateur',directeur:'Directeur Général',comptable:'Comptable',technicien:'Technicien',client:'Client'}[r]||r; }
 

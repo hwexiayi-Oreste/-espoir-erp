@@ -283,6 +283,9 @@ input, select, textarea { font-family: var(--font-b); }
   padding: 24px;
   flex: 1;
   min-height: calc(100vh - var(--topbar-h));
+  width: calc(100% - var(--sidebar-w));
+  max-width: calc(100% - var(--sidebar-w));
+  overflow-x: hidden;
 }
 
 /* ============================================================
@@ -292,6 +295,8 @@ input, select, textarea { font-family: var(--font-b); }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
