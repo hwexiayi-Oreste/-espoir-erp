@@ -761,23 +761,23 @@ td.actions { display: flex; gap: 6px; align-items: center; }
 
   /* Overlay menu mobile */
   .mobile-overlay {
-    display: none;
+    display: none !important;
     position: fixed; inset: 0;
     background: rgba(0,0,0,.6);
     z-index: 300;
     backdrop-filter: blur(2px);
   }
-  .mobile-overlay.open { display: block; }
+  .mobile-overlay.open { display: block !important; }
 
   /* Drawer menu mobile */
   .mobile-drawer {
-    position: fixed;
+    position: fixed !important;
     top: 0; left: 0; bottom: 0;
     width: 280px; max-width: 85vw;
     background: var(--navy-mid);
     border-right: 1px solid rgba(255,255,255,.08);
     z-index: 301;
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     transform: translateX(-100%);
     transition: transform .25s ease;
@@ -846,8 +846,10 @@ td.actions { display: flex; gap: 6px; align-items: center; }
   .erp-main { padding: 16px; }
 }
 
-/* Par défaut ces éléments sont cachés sur desktop */
-.mobile-menu-btn,
-.mobile-overlay,
-.mobile-drawer,
-.topbar-logout-btn { display: none; }
+/* Par défaut ces éléments sont cachés sur desktop (>900px) */
+@media (min-width: 901px) {
+  .mobile-menu-btn,
+  .mobile-overlay,
+  .mobile-drawer,
+  .topbar-logout-btn { display: none !important; }
+}
