@@ -626,8 +626,30 @@ async function imprimerFacture(id){
   </div>
   ${f.notes?`<div style="margin-top:20px;padding:12px;background:#fafafa;border-radius:4px;border-left:3px solid #f5a623;font-size:11px;color:#555;">${f.notes}</div>`:''}
   <div class="footer">Espoir Construction — RCCM : BJ-COT-01-2020-B14-XXXX — NIF : XXXXXXXX · ${f.reference} · Généré le ${new Date().toLocaleDateString('fr-FR')}</div>
-  <script>window.onload=()=>window.print();<\/script>
+  <scr"+"ipt>window.onload=()=>{window.print();}<\/scr"+"ipt>
   
+`);
+  win.document.close();
+}
+
+function exportCSV(){
+  if(!allFactures.length){showToast('warning','Export','Aucune facture.');return;}
+  const header=['Référence','Client','Montant HT','TVA','Total TTC','Statut','Émission','Échéance'];
+  const rows=allFactures.map(f=>[f.reference,f.client_nom||'',f.montant_ht,f.tva,f.montant_ttc,f.statut,f.date_emission,f.date_echeance]);
+  const csv=[header,...rows].map(r=>r.map(v=>`"${v||''}"`).join(';')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`factures-espoir-${new Date().toISOString().split('T')[0]}.csv`;a.click();
+  showToast('success','Export','Fichier CSV téléchargé.');
+}
+
+function resetFiltres(){$('searchInput').value='';$('filtreStatut').value='';chargerFactures();}
+
+(async()=>{
+  await checkAuth();
+  await Promise.all([chargerKPIs(),chargerFactures()]);
+})();
+</script>
+
 <!-- ===== MENU MOBILE ===== -->
 <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
 <div class="mobile-drawer" id="mobileDrawer">
@@ -722,28 +744,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 100);
   setTimeout(() => clearInterval(poll), 5000);
 });
-</script>
-
-`);
-  win.document.close();
-}
-
-function exportCSV(){
-  if(!allFactures.length){showToast('warning','Export','Aucune facture.');return;}
-  const header=['Référence','Client','Montant HT','TVA','Total TTC','Statut','Émission','Échéance'];
-  const rows=allFactures.map(f=>[f.reference,f.client_nom||'',f.montant_ht,f.tva,f.montant_ttc,f.statut,f.date_emission,f.date_echeance]);
-  const csv=[header,...rows].map(r=>r.map(v=>`"${v||''}"`).join(';')).join('\n');
-  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`factures-espoir-${new Date().toISOString().split('T')[0]}.csv`;a.click();
-  showToast('success','Export','Fichier CSV téléchargé.');
-}
-
-function resetFiltres(){$('searchInput').value='';$('filtreStatut').value='';chargerFactures();}
-
-(async()=>{
-  await checkAuth();
-  await Promise.all([chargerKPIs(),chargerFactures()]);
-})();
 </script>
 </body>
 </html>

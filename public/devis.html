@@ -920,8 +920,42 @@ async function imprimerPDF(id) {
       Ce devis est valable jusqu'au ${formatDate(d.date_validite)}. Merci de votre confiance.
     </div>
   </div>
-  <script>window.onload = () => { window.print(); }<\/script>
+  <scr"+"ipt>window.onload=()=>{window.print();}<\/scr"+"ipt>
   
+`);
+  win.document.close();
+}
+
+// ============================================================
+//  EXPORT CSV
+// ============================================================
+function exportCSV() {
+  if (!allDevis.length) { showToast('warning','Export','Aucun devis à exporter.'); return; }
+  const header = ['Référence','Client','Service','Montant HT','TVA','Montant TTC','Statut','Date émission','Date validité'];
+  const rows = allDevis.map(d => [
+    d.reference, d.client_nom||'', d.service,
+    d.montant_ht, d.tva, d.montant_ttc,
+    d.statut, d.date_emission||'', d.date_validite||''
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(';')).join('\n');
+  const blob = new Blob(['\ufeff'+csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `devis-espoir-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('success','Export','Fichier CSV téléchargé.');
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+(async () => {
+  await checkAuth();
+  await chargerClients();
+  await Promise.all([chargerDevis(), chargerKPIs()]);
+})();
+</script>
+
 <!-- ===== MENU MOBILE ===== -->
 <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
 <div class="mobile-drawer" id="mobileDrawer">
@@ -1016,40 +1050,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 100);
   setTimeout(() => clearInterval(poll), 5000);
 });
-</script>
-
-`);
-  win.document.close();
-}
-
-// ============================================================
-//  EXPORT CSV
-// ============================================================
-function exportCSV() {
-  if (!allDevis.length) { showToast('warning','Export','Aucun devis à exporter.'); return; }
-  const header = ['Référence','Client','Service','Montant HT','TVA','Montant TTC','Statut','Date émission','Date validité'];
-  const rows = allDevis.map(d => [
-    d.reference, d.client_nom||'', d.service,
-    d.montant_ht, d.tva, d.montant_ttc,
-    d.statut, d.date_emission||'', d.date_validite||''
-  ]);
-  const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(';')).join('\n');
-  const blob = new Blob(['\ufeff'+csv], { type: 'text/csv;charset=utf-8;' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `devis-espoir-${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  showToast('success','Export','Fichier CSV téléchargé.');
-}
-
-// ============================================================
-//  INIT
-// ============================================================
-(async () => {
-  await checkAuth();
-  await chargerClients();
-  await Promise.all([chargerDevis(), chargerKPIs()]);
-})();
 </script>
 </body>
 </html>
